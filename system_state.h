@@ -7,7 +7,9 @@
 
 typedef enum{
   STATE_OK,
-  STATE_INVALID_PARAMETER
+  STATE_INVALID_PARAMETER,
+  STATE_FAILED_READ,
+  STATE_FUNCTION_FAILED
 } system_state_t;
 
 typedef enum{
@@ -31,5 +33,8 @@ system_state_t system_set_cell_read_timer(uint32_t timer);
 
 bool system_get_cell_read_ready(void);
 void system_set_cell_read_ready(bool state);
+
+system_state_t system_set_cell_reading(uint16_t raw_reading, uint8_t channel);
+system_state_t system_get_cell_reading(uint16_t *raw_reading, uint8_t channel);
 
 #endif

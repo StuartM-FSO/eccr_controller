@@ -71,6 +71,25 @@ void system_set_cell_read_ready(bool state){
   current_state.cell_read_ready = state;
 }
 
+system_state_t system_set_cell_reading(uint16_t raw_reading, uint8_t channel){
+  if(channel >= THREE_CELLS){
+    return STATE_INVALID_PARAMETER;
+  }
+  cells.cell_reading_raw[channel] = raw_reading;
+  return STATE_OK;
+}
+
+system_state_t system_get_cell_reading(uint16_t *raw_reading, uint8_t channel){
+  if(raw_reading == NULL){
+    return STATE_INVALID_PARAMETER;
+  }
+  if(channel >= THREE_CELLS){
+    return STATE_INVALID_PARAMETER;
+  }
+  *raw_reading = cells.cell_reading_raw[channel];
+  return STATE_OK;
+}
+
 // Private functions
 
 bool is_fsm_state_valid(fsm_state_t this_state){
