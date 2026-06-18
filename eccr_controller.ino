@@ -1,5 +1,6 @@
 #include "system_state.h"
 #include "time_helpers.h"
+#include "adc_hal.h"
 
 constexpr uint32_t FREQUENCY_CELL_READ_MS = 1000U;
 
