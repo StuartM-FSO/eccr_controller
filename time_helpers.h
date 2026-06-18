@@ -1,3 +1,4 @@
+#include <sys/_stdint.h>
 #ifndef TIME_HELPERS_H
 #define TIME_HELPERS_H
 

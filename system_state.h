@@ -1,3 +1,4 @@
+#include <sys/_stdint.h>
 #ifndef SYSTEM_STATE_H
 #define SYSTEM_STATE_H
 
@@ -17,6 +18,8 @@ typedef enum{
   FSM_READ_CELLS,
   FSM_END_COUNT // DO NOT ADD STATES BEYOND THIS
 } fsm_state_t;
+
+constexpr uint8_t THREE_CELLS = 3U;
 
 system_state_t state_init(void);
 

@@ -1,3 +1,4 @@
+#include <sys/_stdint.h>
 #include "system_state.h"
 
 typedef struct{
@@ -6,6 +7,12 @@ typedef struct{
   uint32_t cell_read_timer = 0U;
   bool cell_read_ready = false;
 } loop_state_t;
+
+typedef struct{
+  uint16_t cell_reading_raw[THREE_CELLS] = {0};
+} cell_state_t;
+
+static cell_state_t cells;
 
 static loop_state_t current_state = {};
 
@@ -19,6 +26,9 @@ system_state_t state_init(void){
   current_state.fsm_state = FSM_WAITING;
   current_state.cell_read_timer = 0U;
   current_state.cell_read_ready = false;
+  for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
+    cells.cell_reading_raw[channel] = 0U;
+  }
   return STATE_OK;
 }
 
