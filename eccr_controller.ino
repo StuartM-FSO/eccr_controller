@@ -1,7 +1,7 @@
 #include "system_state.h"
 #include "time_helpers.h"
 
-constexpr uint32_t FREQUENCY_CELL_READ_MS = 500U;
+constexpr uint32_t FREQUENCY_CELL_READ_MS = 1000U;
 
 void setup() {
   serial_begin(9600);
@@ -51,9 +51,11 @@ void loop() {
 //  1 - FSM Handlers
 
 void fsm_read_cells(uint32_t now){
+  system_set_cell_read_ready(false);
   Serial.println("Reading cells");
   system_set_fsm_state(FSM_WAITING);
   system_set_cell_read_timer(now);
+  system_set_cell_read_ready(true);
 }
 
 void fsm_waiting(uint32_t now){

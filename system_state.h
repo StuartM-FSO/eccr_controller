@@ -26,4 +26,7 @@ system_state_t system_set_fsm_state(fsm_state_t state);
 system_state_t system_get_cell_read_timer(uint32_t *timer);
 system_state_t system_set_cell_read_timer(uint32_t timer);
 
+bool system_get_cell_read_ready(void);
+void system_set_cell_read_ready(bool state);
+
 #endif
