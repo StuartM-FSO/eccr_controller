@@ -2,15 +2,31 @@
 #include "time_helpers.h"
 #include "adc_hal.h"
 
+typedef enum{
+  INIT_BEGIN,
+  INIT_SUCCESS,
+  INIT_FAILED_STATE,
+  INIT_FAILED_ADC_START
+} init_state_t;
+
 constexpr uint32_t FREQUENCY_CELL_READ_MS = 1000U;
 
 void setup() {
+  init_state_t initialisation_state = INIT_BEGIN;
+
   serial_begin(9600);
   if(state_init() != STATE_OK){
-    Serial.println("Init failed");
-    while (true) {
-      delay(1);
-    }
+    initialisation_state = INIT_FAILED_STATE;
+  } else if(adc_init() != ADC_STATUS_OK){
+    initialisation_state = INIT_FAILED_ADC_START;
+  } else {
+    initialisation_state = INIT_SUCCESS;
+  }
+
+  if(initialisation_state != INIT_SUCCESS){
+    system_set_fsm_state(FSM_UNINITIALISED);
+  } else {
+    system_set_fsm_state(FSM_WAITING);
   }
 }
 
@@ -77,7 +93,9 @@ void fsm_waiting(uint32_t now){
 
 void serial_begin(uint32_t baud_rate){
   Serial.begin(baud_rate);
-  delay(250);
+  while(!Serial){
+    delay(1);
+  }
   Serial.println("Starting");
 }
 
