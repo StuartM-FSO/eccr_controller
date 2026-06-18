@@ -14,6 +14,7 @@ typedef enum{
   FSM_WAITING,
   FSM_FAILED_SAFE,
   FSM_UNINITIALISED,
+  FSM_READ_CELLS,
   FSM_END_COUNT // DO NOT ADD STATES BEYOND THIS
 } fsm_state_t;
 
@@ -21,5 +22,8 @@ system_state_t state_init(void);
 
 system_state_t system_get_fsm_state(fsm_state_t *state);
 system_state_t system_set_fsm_state(fsm_state_t state);
+
+system_state_t system_get_cell_read_timer(uint32_t *timer);
+system_state_t system_set_cell_read_timer(uint32_t timer);
 
 #endif

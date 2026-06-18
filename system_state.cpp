@@ -38,6 +38,19 @@ system_state_t system_set_fsm_state(fsm_state_t state){
   return STATE_OK;
 }
 
+system_state_t system_get_cell_read_timer(uint32_t *timer){
+  if(timer == NULL){
+    return STATE_INVALID_PARAMETER;
+  }
+  *timer = current_state.cell_read_timer;
+  return STATE_OK;
+}
+
+system_state_t system_set_cell_read_timer(uint32_t timer){
+  current_state.cell_read_timer = timer;
+  return STATE_OK;
+}
+
 // Private functions
 
 bool is_fsm_state_valid(fsm_state_t this_state){
