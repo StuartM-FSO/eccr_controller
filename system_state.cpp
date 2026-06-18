@@ -10,6 +10,7 @@ typedef struct{
 
 typedef struct{
   uint16_t cell_reading_raw[THREE_CELLS] = {0};
+  bool initialised = false;
 } cell_state_t;
 
 static cell_state_t cells;
@@ -29,6 +30,7 @@ system_state_t state_init(void){
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
     cells.cell_reading_raw[channel] = 0U;
   }
+  cells.initialised = true;
   return STATE_OK;
 }
 
@@ -72,6 +74,9 @@ void system_set_cell_read_ready(bool state){
 }
 
 system_state_t system_set_cell_reading(uint16_t raw_reading, uint8_t channel){
+  if(!cells.initialised){
+    return STATE_UNINITIALISED;
+  }
   if(channel >= THREE_CELLS){
     return STATE_INVALID_PARAMETER;
   }
@@ -80,6 +85,9 @@ system_state_t system_set_cell_reading(uint16_t raw_reading, uint8_t channel){
 }
 
 system_state_t system_get_cell_reading(uint16_t *raw_reading, uint8_t channel){
+  if(!cells.initialised){
+    return STATE_UNINITIALISED;
+  }
   if(raw_reading == NULL){
     return STATE_INVALID_PARAMETER;
   }

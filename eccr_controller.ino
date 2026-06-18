@@ -55,6 +55,9 @@ void loop() {
     case FSM_READ_CELLS:
       fsm_read_cells(now);
       break;
+    default:
+      system_set_fsm_state(FSM_FAILED_SAFE);
+      break;
   }
 }
 
@@ -72,13 +75,12 @@ void loop() {
 void fsm_read_cells(uint32_t now){
   system_set_cell_read_ready(false);
   if(cell_read() != STATE_OK){
-    Serial.println("Failed at cell reading");
+    Serial.println("Failed at cell read");
     handle_error();
   }
-  system_set_cell_read_ready(true);
-  system_set_fsm_state(FSM_WAITING);
   system_set_cell_read_timer(now);
-  //debug_print_stored_cell_values();
+  system_set_fsm_state(FSM_WAITING);
+  system_set_cell_read_ready(true);
 }
 
 void fsm_waiting(uint32_t now){
@@ -98,8 +100,8 @@ void fsm_waiting(uint32_t now){
 system_state_t cell_read(void){
   uint16_t raw_reading = 0;
 
-  for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
-    if(adc_raw_reading(&raw_reading) != ADC_STATUS_OK){
+  for(uint8_t channel = 0; channel < THREE_CELLS; channel++){
+    if(adc_raw_reading(&raw_reading, channel) != ADC_STATUS_OK){
       return STATE_FAILED_READ;
     }
     if(system_set_cell_reading(raw_reading, channel) != STATE_OK){

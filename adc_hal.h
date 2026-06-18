@@ -28,7 +28,7 @@ const uint8_t ADC_MAX_MV_LO_READING = 67U; // 102% oxygen at 14mV low output cel
 
 
 hal_adc_status_t adc_init();
-hal_adc_status_t adc_raw_reading(uint16_t * raw_reading);
+hal_adc_status_t adc_raw_reading(uint16_t * raw_reading, const uint8_t channel);
 int16_t adc_convert_raw_to_mV(const uint16_t raw_reading);
 hal_adc_status_t x_adc_convert_raw_to_mV(const int16_t raw_reading, int32_t *converted_val_mV);
 

@@ -17,6 +17,7 @@
 
 static const uint8_t MAX_POWER_CHECK_TRIES = 10U;
 static const uint8_t MAX_CONNECTION_CHECK_TRIES = 10U;
+static const uint8_t THREE_CELLS = 3U;
 
 
 // Constants
@@ -49,7 +50,7 @@ static bool is_powered(void);
 static bool map_non_arduino(const uint16_t base_value, uint16_t *scaled_value,
     const uint16_t in_min, const uint16_t in_max, const uint16_t out_min, const uint16_t out_max);
 static bool sort_values(uint16_t arr[3]);
-static hal_adc_status_t read_sensor(uint16_t *reading);
+static hal_adc_status_t read_sensor(uint16_t *reading, const uint8_t channel);
 static bool power_check_multiple(void);
 static bool connected_check_multiple(void);
 static bool state_reset(state_t *state);
@@ -84,7 +85,7 @@ hal_adc_status_t adc_init(void){
     return ADC_STATUS_OK;
 }
 
-hal_adc_status_t adc_raw_reading(uint16_t * const raw_reading){
+hal_adc_status_t adc_raw_reading(uint16_t * const raw_reading, const uint8_t channel){
     const uint8_t MAX_SAMPLES = 3;                            // System will never have anything other than 3 sensors connected to operate
     const uint8_t MEDIAN_SAMPLE_NUMBER = MAX_SAMPLES / 2;     // so the median will always be [1]
     uint16_t reading = 0;
@@ -94,6 +95,9 @@ hal_adc_status_t adc_raw_reading(uint16_t * const raw_reading){
         return ADC_STATUS_NOT_INITIALIZED;
     }
     if(raw_reading == NULL){
+        return ADC_STATUS_INVALID_PARAMETER;
+    }
+    if(channel >= THREE_CELLS){
         return ADC_STATUS_INVALID_PARAMETER;
     }
     if(!power_check_multiple()){
@@ -108,7 +112,7 @@ hal_adc_status_t adc_raw_reading(uint16_t * const raw_reading){
         }
     }
     for(uint8_t sample_number = 0U; sample_number < MAX_SAMPLES; sample_number++){
-        if(read_sensor(&reading) != ADC_STATUS_OK){
+        if(read_sensor(&reading, channel) != ADC_STATUS_OK){
             current_state.adc_initialised = false;
             return ADC_STATUS_HW_ERROR;
         }
@@ -210,7 +214,7 @@ static bool state_reset(state_t * const state){
     return true;
 }
 
-static hal_adc_status_t read_sensor(uint16_t * const reading){
+static hal_adc_status_t read_sensor(uint16_t * const reading, const uint8_t channel){
     bool wait_timeout_ok;
     uint32_t start_time_ms = 0;
     uint32_t elapsed_time_ms = 0;
@@ -219,7 +223,10 @@ static hal_adc_status_t read_sensor(uint16_t * const reading){
     if(reading == NULL){
         return ADC_STATUS_INVALID_PARAMETER;
     }
-    current_state.device.startADCReading(MUX_BY_CHANNEL[CHANNEL_ZERO], false);
+    if(channel >= THREE_CELLS){
+        return ADC_STATUS_INVALID_PARAMETER;
+    }
+    current_state.device.startADCReading(MUX_BY_CHANNEL[channel], false);
     wait_timeout_ok = true;
     start_time_ms = millis();
     while(!current_state.device.conversionComplete()){
