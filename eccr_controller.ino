@@ -1,6 +1,7 @@
 #include "system_state.h"
 #include "time_helpers.h"
 #include "adc_hal.h"
+#include <Wire.h>
 
 typedef enum{
   INIT_BEGIN,
@@ -13,6 +14,7 @@ constexpr uint32_t FREQUENCY_CELL_READ_MS = 1000U;
 
 void setup() {
   init_state_t initialisation_state = INIT_BEGIN;
+  Wire.begin();
 
   serial_begin(9600);
   if(state_init() != STATE_OK){
@@ -22,7 +24,6 @@ void setup() {
   } else {
     initialisation_state = INIT_SUCCESS;
   }
-
   if(initialisation_state != INIT_SUCCESS){
     system_set_fsm_state(FSM_UNINITIALISED);
   } else {
