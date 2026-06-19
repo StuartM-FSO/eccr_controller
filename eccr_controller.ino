@@ -91,7 +91,6 @@ void fsm_read_cells(uint32_t now){
     system_set_fsm_state(FSM_FAILED_SAFE);
     return;
   }
-  Serial.println("Cells read");
 }
 
 void fsm_waiting(uint32_t now){
