@@ -74,7 +74,10 @@ void loop() {
 //  1 - FSM Handlers
 
 void fsm_read_cells(uint32_t now){
-  system_set_cell_read_ready(false);
+  if(system_set_cell_read_ready(false) != STATE_OK){
+    system_set_fsm_state(FSM_FAILED_SAFE);
+    return;
+  }
   if(cell_read() != STATE_OK){
     Serial.println("Failed at cell read");
     handle_error();
@@ -84,7 +87,10 @@ void fsm_read_cells(uint32_t now){
     system_set_fsm_state(FSM_FAILED_SAFE);
     return;
   }
-  system_set_cell_read_ready(true);
+  if(system_set_cell_read_ready(true) != STATE_OK){
+    system_set_fsm_state(FSM_FAILED_SAFE);
+    return;
+  }
   Serial.println("Cells read");
 }
 

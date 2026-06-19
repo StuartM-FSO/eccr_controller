@@ -5,12 +5,12 @@ typedef struct{
   bool initialised = false;
   fsm_state_t fsm_state = FSM_UNINITIALISED;
   uint32_t cell_read_timer = 0U;
-  bool cell_read_ready = false;
 } loop_state_t;
 
 typedef struct{
   uint16_t cell_reading_raw[THREE_CELLS] = {0};
   bool initialised = false;
+  bool cell_read_ready = false;
 } cell_state_t;
 
 static cell_state_t cells;
@@ -25,11 +25,11 @@ system_state_t state_init(void){
   }
   current_state.fsm_state = FSM_WAITING;
   current_state.cell_read_timer = 0U;
-  current_state.cell_read_ready = false;
   current_state.initialised = true;
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
     cells.cell_reading_raw[channel] = 0U;
   }
+  cells.cell_read_ready = false;
   cells.initialised = true;
   return STATE_OK;
 }
@@ -77,12 +77,26 @@ system_state_t system_set_cell_read_timer(uint32_t timer){
   return STATE_OK;
 }
 
-bool system_get_cell_read_ready(void){
-  return current_state.cell_read_ready;
+system_state_t system_get_cell_read_ready(bool *ready){
+  if(!cells.initialised){
+    return STATE_UNINITIALISED;
+  }
+  if(ready == NULL){
+    return STATE_INVALID_PARAMETER;
+  }
+  *ready = cells.cell_read_ready;
+  return STATE_OK;
 }
 
-void system_set_cell_read_ready(bool state){
-  current_state.cell_read_ready = state;
+system_state_t system_set_cell_read_ready(bool state){
+  if(!cells.initialised){
+    return STATE_UNINITIALISED;
+  }
+  if((state != true) && (state != false)){
+    return STATE_INVALID_PARAMETER;
+  }
+  cells.cell_read_ready = state;
+  return STATE_OK;
 }
 
 system_state_t system_set_cell_reading(uint16_t raw_reading, uint8_t channel){
