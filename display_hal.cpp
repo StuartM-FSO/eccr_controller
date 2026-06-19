@@ -27,7 +27,7 @@ static const uint8_t MAX_CONNECTION_CHECK_TRIES = 10U;
 static const uint8_t TEXT_COLOUR_WHITE = 1U;
 static const uint8_t TEXT_COLOUR_BLACK = 0U;
 static const uint8_t DISPLAY_WIDTH = 128U;
-static const uint8_t DISPLAY_HEIGHT = 64U;
+static const uint8_t DISPLAY_HEIGHT = 32U;
 static const uint8_t DISPLAY_I2C_ADDR = 0x3C;
 
 typedef struct{

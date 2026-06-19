@@ -1,13 +1,17 @@
 #include "system_state.h"
 #include "time_helpers.h"
 #include "adc_hal.h"
+#include "gpio_hal.h"
+#include "display_hal.h"
 #include <Wire.h>
 
 typedef enum{
   INIT_BEGIN,
   INIT_SUCCESS,
   INIT_FAILED_STATE,
-  INIT_FAILED_ADC_START
+  INIT_FAILED_ADC_START,
+  INIT_FAILED_GPIO,
+  INIT_FAILED_DISPLAY
 } init_state_t;
 
 constexpr uint32_t FREQUENCY_CELL_READ_MS = 1000U;
@@ -22,6 +26,10 @@ void setup() {
     initialisation_state = INIT_FAILED_STATE;
   } else if(adc_init() != ADC_STATUS_OK){
     initialisation_state = INIT_FAILED_ADC_START;
+  } else if(gpio_init() != GPIO_STATUS_OK){
+    initialisation_state = INIT_FAILED_GPIO;
+  } else if(display_init() != DISPLAY_STATUS_OK){
+    initialisation_state = INIT_FAILED_DISPLAY;
   } else {
     initialisation_state = INIT_SUCCESS;
   }
@@ -29,7 +37,9 @@ void setup() {
     system_set_fsm_state(FSM_UNINITIALISED);
   } else {
     system_set_fsm_state(FSM_WAITING);
+    Serial.println("Success");
   }
+  debug_test_display();
 }
 
 void loop() {
@@ -151,4 +161,14 @@ void debug_print_stored_cell_values(void){
     Serial.print(adc_convert_raw_to_mV(raw_reading));
     Serial.println();
   }
+}
+
+void debug_test_display(){
+  display_clear();
+  display_font_size(2);
+  display_set_colour(DISPLAY_WHITE, DISPLAY_BLACK);
+  display_set_cursor(0, 0);
+  display_println("TEST1");
+  display_println("TEST2");
+  display_update();
 }
