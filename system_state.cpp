@@ -23,10 +23,10 @@ system_state_t state_init(void){
   if(current_state.initialised){
     return STATE_OK;
   }
-  current_state.initialised = true;
   current_state.fsm_state = FSM_WAITING;
   current_state.cell_read_timer = 0U;
   current_state.cell_read_ready = false;
+  current_state.initialised = true;
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
     cells.cell_reading_raw[channel] = 0U;
   }
@@ -40,11 +40,17 @@ system_state_t system_get_fsm_state(fsm_state_t *state){
   if(state == NULL){
     return STATE_INVALID_PARAMETER;
   }
+  if(!current_state.initialised){
+    return STATE_UNINITIALISED;
+  }
   *state = current_state.fsm_state;
   return STATE_OK;
 }
 
 system_state_t system_set_fsm_state(fsm_state_t state){
+  if(!current_state.initialised){
+    return STATE_UNINITIALISED;
+  }
   if(!is_fsm_state_valid(state)){
     return STATE_INVALID_PARAMETER;
   }
@@ -53,6 +59,9 @@ system_state_t system_set_fsm_state(fsm_state_t state){
 }
 
 system_state_t system_get_cell_read_timer(uint32_t *timer){
+  if(!current_state.initialised){
+    return STATE_UNINITIALISED;
+  }
   if(timer == NULL){
     return STATE_INVALID_PARAMETER;
   }
@@ -61,6 +70,9 @@ system_state_t system_get_cell_read_timer(uint32_t *timer){
 }
 
 system_state_t system_set_cell_read_timer(uint32_t timer){
+  if(!current_state.initialised){
+    return STATE_UNINITIALISED;
+  }
   current_state.cell_read_timer = timer;
   return STATE_OK;
 }
