@@ -47,7 +47,7 @@ system_state_t system_get_fsm_state(fsm_state_t *state){
   return STATE_OK;
 }
 
-system_state_t system_set_fsm_state(fsm_state_t state){
+system_state_t system_set_fsm_state(const fsm_state_t state){
   if(!current_state.initialised){
     return STATE_UNINITIALISED;
   }
@@ -69,7 +69,7 @@ system_state_t system_get_cell_read_timer(uint32_t *timer){
   return STATE_OK;
 }
 
-system_state_t system_set_cell_read_timer(uint32_t timer){
+system_state_t system_set_cell_read_timer(const uint32_t timer){
   if(!current_state.initialised){
     return STATE_UNINITIALISED;
   }
@@ -88,7 +88,7 @@ system_state_t system_get_cell_read_ready(bool *ready){
   return STATE_OK;
 }
 
-system_state_t system_set_cell_read_ready(bool state){
+system_state_t system_set_cell_read_ready(const bool state){
   if(!cells.initialised){
     return STATE_UNINITIALISED;
   }
@@ -99,7 +99,7 @@ system_state_t system_set_cell_read_ready(bool state){
   return STATE_OK;
 }
 
-system_state_t system_set_cell_reading(uint16_t raw_reading, uint8_t channel){
+system_state_t system_set_cell_reading(const uint16_t raw_reading, const uint8_t channel){
   if(!cells.initialised){
     return STATE_UNINITIALISED;
   }
