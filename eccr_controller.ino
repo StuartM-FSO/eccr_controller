@@ -14,6 +14,7 @@ constexpr uint32_t FREQUENCY_CELL_READ_MS = 1000U;
 
 void setup() {
   init_state_t initialisation_state = INIT_BEGIN;
+  fsm_state_t state_after_init = FSM_UNINITIALISED;
   Wire.begin();
 
   serial_begin(9600);
@@ -78,9 +79,13 @@ void fsm_read_cells(uint32_t now){
     Serial.println("Failed at cell read");
     handle_error();
   }
-  system_set_cell_read_timer(now);
   system_set_fsm_state(FSM_WAITING);
+  if(system_set_cell_read_timer(now) != STATE_OK){
+    system_set_fsm_state(FSM_FAILED_SAFE);
+    return;
+  }
   system_set_cell_read_ready(true);
+  Serial.println("Cells read");
 }
 
 void fsm_waiting(uint32_t now){
