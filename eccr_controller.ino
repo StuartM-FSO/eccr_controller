@@ -165,10 +165,22 @@ void debug_print_stored_cell_values(void){
 
 void debug_test_display(){
   display_clear();
-  display_font_size(2);
+  display_font_size(1);
   display_set_colour(DISPLAY_WHITE, DISPLAY_BLACK);
   display_set_cursor(0, 0);
-  display_println("TEST1");
-  display_println("TEST2");
+  display_println("1.00 1.00 1.00");
+  display_println("12 12 12");
   display_update();
+}
+
+void debug_test_slide_switch(){
+  switchstate_t switch_state = gpio_calibration_switch_on();
+
+  Serial.println(switch_state);
+}
+
+void debug_test_momentary_switch(){
+  switchstate_t switch_state = gpio_select_button_pressed();
+
+  Serial.println(switch_state);
 }
