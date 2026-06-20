@@ -24,4 +24,27 @@ void format_ppo2_to_text(const uint16_t value, char output[FORMATTING_HUNDREDTHS
     }
 }
 
+void format_integer_for_display(uint16_t value, char buffer[FORMATTING_INTEGER_STR_LEN]){
+  uint16_t temp;
+  uint8_t pos = 0U;
+
+  if(value > 999U){
+    value = 999U;
+  }
+  if(value >= 100U){
+    buffer[pos] = (char)('0' + (uint8_t)(value / 100U));
+    pos++;
+    value %= 100U;
+  }
+  if((value >= 10U) || (pos > 0U)){
+    buffer[pos] = (char)('0' + (uint8_t)(value / 10U));
+    pos++;
+    value %= 10U;
+  }
+  temp = value;
+  buffer[pos] = (char)('0' + (uint8_t)temp);
+  pos++;
+  buffer[pos] = '\0';
+}
+
 // Private
