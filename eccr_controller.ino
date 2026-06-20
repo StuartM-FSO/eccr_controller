@@ -217,22 +217,29 @@ void fsm_waiting(const uint32_t now){
 void fsm_calibration_activated(const uint32_t now){
   bool button_pushed = gpio_momentary_pushed();
   bool slide_switch_on = gpio_slide_switch_on();
+  bool screen_written_once = system_get_screen_written_once();
   uint32_t calibration_hold_time_ms = 0U;
 
   if(!slide_switch_on || !button_pushed){
+    system_set_screen_written_once(false);
     system_set_fsm_state(FSM_WAITING);
     return;
   }
   system_get_calibration_hold_timer(&calibration_hold_time_ms);
   if(has_timer_elapsed(now, calibration_hold_time_ms, MAX_CALIBRATION_HOLD_MS)){
+    system_set_screen_written_once(false);
     system_set_fsm_state(FSM_CALIBRATION_WRITING);
     return;
   }
-  display_clear();
-  display_set_cursor(0, 0);
-  display_println("HOLD TO");
-  display_println("CALIBRATE");
-  display_update();
+  if(!screen_written_once){
+    Serial.println("Screen write");
+    display_clear();
+    display_set_cursor(0, 0);
+    display_println("HOLD TO");
+    display_println("CALIBRATE");
+    display_update();
+    system_set_screen_written_once(true);
+  }
 }
 
 void fsm_calibration_writing(const uint32_t now){

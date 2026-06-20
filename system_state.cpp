@@ -12,6 +12,7 @@ typedef struct{
   uint32_t divemode_led_timer = 0U;
   uint32_t calibration_write_timer = 0U;
   uint32_t calibration_hold_timer = 0U;
+  bool screen_written_once = false;
 } loop_state_t;
 
 typedef struct{
@@ -38,6 +39,7 @@ system_state_t state_init(void){
   current_state.calibration_write_timer = 0U;
   current_state.display_on = false;
   current_state.initialised = true;
+  current_state.screen_written_once = false;
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
     cells.cell_reading_raw[channel] = 0U;
   }
@@ -273,6 +275,14 @@ system_state_t system_set_calibration_hold_timer(const uint32_t timer){
   }
   current_state.calibration_hold_timer = timer;
   return STATE_OK;
+}
+
+bool system_get_screen_written_once(void){
+  return current_state.screen_written_once;
+}
+
+void system_set_screen_written_once(bool state){
+  current_state.screen_written_once = state;
 }
 
 // Private functions

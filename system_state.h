@@ -62,4 +62,7 @@ system_state_t system_set_calibration_factor(const uint16_t calibration_factor, 
 system_state_t system_get_calibration_hold_timer(uint32_t *timer);
 system_state_t system_set_calibration_hold_timer(const uint32_t timer);
 
+bool system_get_screen_written_once(void);
+void system_set_screen_written_once(bool state);
+
 #endif
