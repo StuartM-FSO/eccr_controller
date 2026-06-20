@@ -198,6 +198,10 @@ system_state_t assign_mv(int16_t cell_reading_mv[]){
   return STATE_OK;
 }
 
+system_state_t assign_cell_calibration_factors(void){
+  
+}
+
 
 //  3 - Display
 display_status_t screen_off(void){
