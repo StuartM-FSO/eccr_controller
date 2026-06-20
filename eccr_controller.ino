@@ -19,6 +19,8 @@ constexpr uint32_t FREQUENCY_CELL_READ_MS = 1000U;
 constexpr uint32_t FREQUENCY_LCD_UPDATE_MS = 1000U;
 constexpr uint32_t FREQUENCY_DIVEMODE_LED_ON_MS = 200U;
 constexpr uint32_t FREQUENCY_DIVEMODE_LED_OFF_MS = 3000U;
+constexpr uint32_t FREQUENCY_DATAMODE_LED_ON_MS = 100U;
+constexpr uint32_t FREQUENCY_DATAMODE_LED_OFF_MS = 200U;
 
 void setup() {
   init_state_t initialisation_state = INIT_BEGIN;
@@ -113,6 +115,7 @@ void fsm_waiting(uint32_t now){
   uint32_t divemode_led_timer_ms = 0U;
   uint32_t divemode_flash_interval_ms = 0U;
   bool divemode_led_on = false;
+  bool display_switch_on = gpio_slide_switch_on();
 
   if(system_get_cell_read_timer(&last_cell_read_time_ms) != STATE_OK){
     handle_error();
@@ -130,13 +133,17 @@ void fsm_waiting(uint32_t now){
     handle_error();
     return;
   }
-  divemode_flash_interval_ms = (divemode_led_on) ? FREQUENCY_DIVEMODE_LED_ON_MS : FREQUENCY_DIVEMODE_LED_OFF_MS;
+  if(!display_switch_on){
+    divemode_flash_interval_ms = (divemode_led_on) ? FREQUENCY_DIVEMODE_LED_ON_MS : FREQUENCY_DIVEMODE_LED_OFF_MS;
+  } else {
+    divemode_flash_interval_ms = (divemode_led_on) ? FREQUENCY_DATAMODE_LED_ON_MS : FREQUENCY_DATAMODE_LED_OFF_MS;
+  }
+
 
   if(has_timer_elapsed(now, last_cell_read_time_ms, FREQUENCY_CELL_READ_MS)){
     system_set_fsm_state(FSM_READ_CELLS);
   }
   if(has_timer_elapsed(now, last_lcd_update_time_ms, FREQUENCY_LCD_UPDATE_MS)){
-    bool display_switch_on = gpio_slide_switch_on();
     if(display_switch_on){
       if(screen_on() != DISPLAY_STATUS_OK){
         // Handle failure
