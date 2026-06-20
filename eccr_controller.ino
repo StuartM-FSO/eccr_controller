@@ -110,6 +110,8 @@ void fsm_read_cells(uint32_t now){
 void fsm_waiting(uint32_t now){
   uint32_t last_cell_read_time_ms = 0U;
   uint32_t last_lcd_update_time_ms = 0U;
+  uint32_t divemode_led_timer_ms = 0U;
+  
 
   if(system_get_cell_read_timer(&last_cell_read_time_ms) != STATE_OK){
     handle_error();
@@ -119,6 +121,11 @@ void fsm_waiting(uint32_t now){
     handle_error();
     return;
   }
+  if(system_get_divemode_led_timer(&divemode_led_timer_ms) != STATE_OK){
+    handle_error();
+    return;
+  }
+
   if(has_timer_elapsed(now, last_cell_read_time_ms, FREQUENCY_CELL_READ_MS)){
     system_set_fsm_state(FSM_READ_CELLS);
   }

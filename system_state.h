@@ -36,6 +36,9 @@ system_state_t system_set_cell_read_timer(const uint32_t timer);
 system_state_t system_get_lcd_update_timer(uint32_t * const timer);
 system_state_t system_set_lcd_update_timer(const uint32_t timer);
 
+system_state_t system_get_divemode_led_timer(uint32_t * const timer);
+system_state_t system_set_divemode_led_timer(const uint32_t timer);
+
 system_state_t system_get_cell_read_ready(bool * const ready);
 system_state_t system_set_cell_read_ready(const bool state);
 
@@ -44,5 +47,8 @@ system_state_t system_get_cell_reading(uint16_t * const raw_reading, const uint8
 
 system_state_t system_get_display_on(bool * const status);
 system_state_t system_set_display_on(const bool status);
+
+system_state_t system_get_divemode_led_on(bool * const status);
+system_state_t system_set_divemode_led_on(const bool status);
 
 #endif
