@@ -126,6 +126,25 @@ system_state_t system_get_cell_reading(uint16_t *raw_reading, uint8_t channel){
   return STATE_OK;
 }
 
+system_state_t system_get_display_on(bool * const status){
+  if(!current_state.initialised){
+    return STATE_UNINITIALISED;
+  }
+  if(status == NULL){
+    return STATE_INVALID_PARAMETER;
+  }
+  *status = current_state.display_on;
+  return STATE_OK;
+}
+
+system_state_t system_set_display_on(const bool status){
+  if(!current_state.initialised){
+    return STATE_UNINITIALISED;
+  }
+  current_state.display_on = status;
+  return STATE_OK;
+}
+
 // Private functions
 
 bool is_fsm_state_valid(fsm_state_t this_state){
