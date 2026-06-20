@@ -107,7 +107,6 @@ void fsm_read_cells(uint32_t now){
 void fsm_waiting(uint32_t now){
   uint32_t last_cell_read_time_ms = 0U;
   bool display_switch_on = gpio_slide_switch_on();
-  int16_t current_reading_mv[THREE_CELLS] = {0};
 
   if(system_get_cell_read_timer(&last_cell_read_time_ms) != STATE_OK){
     handle_error();
@@ -116,11 +115,8 @@ void fsm_waiting(uint32_t now){
     //system_set_cell_read_timer(now);
     system_set_fsm_state(FSM_READ_CELLS);
   }
-  if(assign_mv(current_reading_mv) != STATE_OK){
-      Serial.println("cell mv error");
-  }
   if(display_switch_on){
-    if(screen_on(current_reading_mv) != DISPLAY_STATUS_OK){
+    if(screen_on() != DISPLAY_STATUS_OK){
       // Handle failure
     }
   } else {
@@ -168,8 +164,13 @@ display_status_t screen_off(void){
   return display_update();
 }
 
-display_status_t screen_on(int16_t cell_mv[]){
+display_status_t screen_on(){
   char buffer_mv[FORMATTING_INTEGER_STR_LEN];
+  int16_t current_mv[THREE_CELLS] = {0};
+
+  if(assign_mv(current_mv) != STATE_OK){
+    return DISPLAY_STATUS_INVALID_PARAM;
+  }
 
   display_clear();
   display_font_size(1);
@@ -177,7 +178,7 @@ display_status_t screen_on(int16_t cell_mv[]){
   display_println("xxx");
 
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
-    format_integer_for_display(cell_mv[channel], buffer_mv);
+    format_integer_for_display(current_mv[channel], buffer_mv);
     display_print(buffer_mv);
     display_print("mV ");
   }
