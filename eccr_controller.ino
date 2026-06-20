@@ -26,6 +26,7 @@ constexpr uint32_t FREQUENCY_DIVEMODE_LED_ON_MS = 200U;
 constexpr uint32_t FREQUENCY_DIVEMODE_LED_OFF_MS = 3000U;
 constexpr uint32_t FREQUENCY_DATAMODE_LED_ON_MS = 100U;
 constexpr uint32_t FREQUENCY_DATAMODE_LED_OFF_MS = 400U;
+constexpr uint32_t MAX_CALIBRATION_HOLD_MS = 5000U;
 constexpr uint16_t CALIBRATION_PPO2x1000 = 970U; // See Note 1
 
 static uint16_t count = 0U;
@@ -214,20 +215,17 @@ void fsm_waiting(const uint32_t now){
 }
 
 void fsm_calibration_activated(const uint32_t now){
-  uint32_t start_time_ms = 0U;
+  bool button_pushed = gpio_momentary_pushed();
+  bool slide_switch_on = gpio_slide_switch_on();
+  uint32_t calibration_hold_time_ms = 0U;
 
-  if(system_get_calibration_hold_timer(&start_time_ms) != STATE_OK){
-    Serial.println("Failed at fsm_cal_activ");
-    handle_error();
-  }
-  Serial.println(now - start_time_ms);
-  /*if(has_timer_elapsed(now, start_time_ms, 5000U)){
-    system_set_calibration_hold_timer(now);
-    system_set_fsm_state(FSM_CALIBRATION_WRITING);
-    return;
-  }*/
-  if(!gpio_slide_switch_on()){
+  if(!slide_switch_on || !button_pushed){
     system_set_fsm_state(FSM_WAITING);
+    return;
+  }
+  system_get_calibration_hold_timer(&calibration_hold_time_ms);
+  if(has_timer_elapsed(now, calibration_hold_time_ms, MAX_CALIBRATION_HOLD_MS)){
+    system_set_fsm_state(FSM_CALIBRATION_WRITING);
     return;
   }
   display_clear();
@@ -235,11 +233,6 @@ void fsm_calibration_activated(const uint32_t now){
   display_println("HOLD TO");
   display_println("CALIBRATE");
   display_update();
-  if(!gpio_momentary_pushed()){
-    system_set_calibration_write_timer(now);
-    system_set_fsm_state(FSM_CALIBRATION_WRITING);
-    return;
-  }
 }
 
 void fsm_calibration_writing(const uint32_t now){
