@@ -39,7 +39,6 @@ void setup() {
     system_set_fsm_state(FSM_WAITING);
     Serial.println("Success");
   }
-  debug_test_display();
 }
 
 void loop() {
