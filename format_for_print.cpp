@@ -2,7 +2,7 @@
 
 // Public
 
-void format_ppo2_to_text(const uint16_t value, char output[FORMATTING_HUNDREDTHS_STR_LEN]){
+void format_ppo2_to_text(const uint16_t value, char output[FORMATTING_PPO2_STR_LEN]){
     uint16_t integer_part;
     uint16_t fractional_part;
     bool within_bounds = (value <= 9999U);
