@@ -3,6 +3,7 @@
 
 typedef struct{
   bool initialised = false;
+  bool display_on = false;
   fsm_state_t fsm_state = FSM_UNINITIALISED;
   uint32_t cell_read_timer = 0U;
 } loop_state_t;
@@ -25,6 +26,7 @@ system_state_t state_init(void){
   }
   current_state.fsm_state = FSM_WAITING;
   current_state.cell_read_timer = 0U;
+  current_state.display_on = false;
   current_state.initialised = true;
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
     cells.cell_reading_raw[channel] = 0U;

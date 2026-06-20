@@ -26,16 +26,19 @@ constexpr uint8_t THREE_CELLS = 3U;
 
 system_state_t state_init(void);
 
-system_state_t system_get_fsm_state(fsm_state_t *state);
+system_state_t system_get_fsm_state(fsm_state_t * const state);
 system_state_t system_set_fsm_state(const fsm_state_t state);
 
-system_state_t system_get_cell_read_timer(uint32_t *timer);
+system_state_t system_get_cell_read_timer(uint32_t * const timer);
 system_state_t system_set_cell_read_timer(const uint32_t timer);
 
-system_state_t system_get_cell_read_ready(bool *ready);
+system_state_t system_get_cell_read_ready(bool * const ready);
 system_state_t system_set_cell_read_ready(const bool state);
 
 system_state_t system_set_cell_reading(const uint16_t raw_reading, const uint8_t channel);
-system_state_t system_get_cell_reading(uint16_t *raw_reading, uint8_t channel);
+system_state_t system_get_cell_reading(uint16_t * const raw_reading, const uint8_t channel);
+
+system_state_t system_get_display_on(bool * const status);
+system_state_t system_set_display_on(const bool status);
 
 #endif
