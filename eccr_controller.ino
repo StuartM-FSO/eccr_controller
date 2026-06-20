@@ -1,3 +1,6 @@
+//   NOTES
+//   1. This value assumes that a loop flush will be imperfect and a max 97% oxygen is only achievable. Do not exceed 100% (1000U)
+
 #include "system_state.h"
 #include "time_helpers.h"
 #include "adc_hal.h"
@@ -23,6 +26,7 @@ constexpr uint32_t FREQUENCY_DIVEMODE_LED_ON_MS = 200U;
 constexpr uint32_t FREQUENCY_DIVEMODE_LED_OFF_MS = 3000U;
 constexpr uint32_t FREQUENCY_DATAMODE_LED_ON_MS = 100U;
 constexpr uint32_t FREQUENCY_DATAMODE_LED_OFF_MS = 400U;
+constexpr uint16_t CALIBRATION_PPO2x1000 = 970U; // See Note 1
 
 void setup() {
   init_state_t initialisation_state = INIT_BEGIN;
@@ -97,7 +101,24 @@ void loop() {
 
 //  0 - Work in progress
 
+system_state_t convert_raw_to_ppO2(const uint16_t raw, const uint8_t channel, uint16_t * const raw_converted_to_ppO2){
+  uint16_t reference_value = 0;
+  uint32_t ppO2 = 0;
+  const uint32_t scale = CALIBRATION_PPO2x1000;
+  uint32_t temp = 0;
 
+  if(system_get_calibration_factor(&reference_value, channel) != STATE_OK){
+    return STATE_FUNCTION_FAILED;
+  }
+  if((raw_converted_to_ppO2 == NULL) || (reference_value == 0)){
+    return STATE_INVALID_PARAMETER;
+  }
+  temp = ((uint32_t)raw) * scale;
+  ppO2 = temp / reference_value;
+  if (ppO2 > UINT16_MAX) return STATE_INVALID_PARAMETER;
+  *raw_converted_to_ppO2 = (uint16_t)ppO2;
+  return STATE_OK;
+}
 
 //  1 - FSM Handlers
 
@@ -119,6 +140,8 @@ void fsm_read_cells(uint32_t now){
     return;
   }
   system_set_fsm_state(FSM_WAITING);
+
+  debug_test_ppo2_conversion();
 }
 
 void fsm_waiting(uint32_t now){
@@ -346,5 +369,16 @@ void debug_display_cal_factors(void){
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
     system_get_calibration_factor(&read, channel);
     Serial.println(read);
+  }
+}
+
+void debug_test_ppo2_conversion(){
+  uint16_t raw_reading = 0U;
+  uint16_t ppo2 = 0U;
+
+  for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
+    system_get_cell_reading(&raw_reading, channel);
+    convert_raw_to_ppO2(raw_reading, channel, &ppo2);
+    Serial.println(ppo2);
   }
 }
