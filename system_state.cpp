@@ -11,6 +11,7 @@ typedef struct{
   uint32_t lcd_update_timer = 0U;
   uint32_t divemode_led_timer = 0U;
   uint32_t calibration_write_timer = 0U;
+  uint32_t calibration_hold_timer = 0U;
 } loop_state_t;
 
 typedef struct{
@@ -252,6 +253,25 @@ system_state_t system_set_calibration_write_timer(const uint32_t timer){
     return STATE_UNINITIALISED;
   }
   current_state.calibration_write_timer = timer;
+  return STATE_OK;
+}
+
+system_state_t system_get_calibration_hold_timer(uint32_t *timer){
+  if(!current_state.initialised){
+    return STATE_UNINITIALISED;
+  }
+  if(timer == NULL){
+    return STATE_INVALID_PARAMETER;
+  }
+  *timer = current_state.calibration_hold_timer;
+  return STATE_OK;
+}
+
+system_state_t system_set_calibration_hold_timer(const uint32_t timer){
+  if(!current_state.initialised){
+    return STATE_UNINITIALISED;
+  }
+  current_state.calibration_hold_timer = timer;
   return STATE_OK;
 }
 

@@ -28,9 +28,9 @@ void format_integer_for_display(uint16_t value, char buffer[FORMATTING_INTEGER_S
   uint16_t temp;
   uint8_t pos = 0U;
 
-  if(value > 999U){
+  /*if(value > 999U){
     value = 999U;
-  }
+  }*/
   if(value >= 100U){
     buffer[pos] = (char)('0' + (uint8_t)(value / 100U));
     pos++;
