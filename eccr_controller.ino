@@ -104,7 +104,7 @@ void fsm_read_cells(uint32_t now){
 
 void fsm_waiting(uint32_t now){
   uint32_t last_cell_read_time_ms = 0U;
-  bool display_switch_on = false;
+  bool display_switch_on = gpio_slide_switch_on();
 
   if(system_get_cell_read_timer(&last_cell_read_time_ms) != STATE_OK){
     handle_error();
@@ -113,7 +113,15 @@ void fsm_waiting(uint32_t now){
     //system_set_cell_read_timer(now);
     system_set_fsm_state(FSM_READ_CELLS);
   }
-
+  if(display_switch_on){
+    display_clear();
+    display_set_cursor(0, 0);
+    display_println("ON");
+    display_update();
+  } else {
+    display_clear();
+    display_update();
+  }
 }
 
 //  2 - Cell handling
