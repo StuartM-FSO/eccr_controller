@@ -223,7 +223,7 @@ system_state_t system_get_calibration_factor(uint16_t * const calibration_factor
   return STATE_OK;
 }
 
-system_state_t system_set_divemode_led_on(const uint16_t calibration_factor, const uint8_t channel){
+system_state_t system_set_calibration_factor(const uint16_t calibration_factor, const uint8_t channel){
   if(!current_state.initialised){
     return STATE_UNINITIALISED;
   }

@@ -43,12 +43,20 @@ void setup() {
   else {
     initialisation_state = INIT_SUCCESS;
   }
+
   if(initialisation_state != INIT_SUCCESS){
     system_set_fsm_state(FSM_UNINITIALISED);
   } else {
     system_set_fsm_state(FSM_WAITING);
     Serial.println("Success");
   }
+
+  if(assign_cell_calibration_factors() != STATE_OK){
+    system_set_fsm_state(FSM_FAILED_SAFE);
+    Serial.println("EEPROM read failed");
+  }
+
+  debug_display_cal_factors();
 }
 
 void loop() {
@@ -199,7 +207,19 @@ system_state_t assign_mv(int16_t cell_reading_mv[]){
 }
 
 system_state_t assign_cell_calibration_factors(void){
-  
+  uint16_t temp_calibration_factors[THREE_CELLS];
+
+  if(eeprom_hal_read_array(temp_calibration_factors) != MEM_OK){
+    Serial.println("---");
+    handle_error();
+    return STATE_FAILED_READ;
+  }
+  for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
+    if(system_set_calibration_factor(temp_calibration_factors[channel], channel) != STATE_OK){
+      return STATE_FUNCTION_FAILED;
+    }
+  }
+  return STATE_OK;
 }
 
 
@@ -297,4 +317,34 @@ void debug_flash_led(){
   delay(5000);
   gpio_led_on(false);
   delay(1000);
+}
+
+void debug_test_eeprom(){
+  uint16_t test[THREE_CELLS];
+  uint16_t read[THREE_CELLS] = {0};
+
+  test[0] = 1234;
+  test[1] = 2468;
+  test[2] = 3579;
+
+  Serial.println(eeprom_hal_write_array(test));
+  Serial.println(eeprom_hal_read_array(read));
+
+  Serial.println(read[0]);
+
+  system_set_calibration_factor(test[0], 0);
+  
+  uint16_t testRead = 0;
+  system_get_calibration_factor(&testRead, 0);
+  Serial.println(testRead);
+
+}
+
+void debug_display_cal_factors(void){
+  uint16_t read = 0;
+
+  for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
+    system_get_calibration_factor(&read, channel);
+    Serial.println(read);
+  }
 }
