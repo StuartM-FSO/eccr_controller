@@ -12,7 +12,8 @@ typedef enum{
   INIT_FAILED_STATE,
   INIT_FAILED_ADC_START,
   INIT_FAILED_GPIO,
-  INIT_FAILED_DISPLAY
+  INIT_FAILED_DISPLAY,
+  INIT_FAILED_EEPROM
 } init_state_t;
 
 constexpr uint32_t FREQUENCY_CELL_READ_MS = 1000U;
@@ -36,7 +37,9 @@ void setup() {
     initialisation_state = INIT_FAILED_GPIO;
   } else if(display_init() != DISPLAY_STATUS_OK){
     initialisation_state = INIT_FAILED_DISPLAY;
-  } else {
+  } else if(eeprom_hal_init(LOW_OUTPUT_CELL) != MEM_OK)
+    initialisation_state = INIT_FAILED_EEPROM;
+  else {
     initialisation_state = INIT_SUCCESS;
   }
   if(initialisation_state != INIT_SUCCESS){
