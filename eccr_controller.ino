@@ -20,6 +20,14 @@ typedef enum{
   INIT_FAILED_EEPROM
 } init_state_t;
 
+typedef enum {
+  SENSOR_0_REJECTED = 0U,
+  SENSOR_1_REJECTED = 1U,
+  SENSOR_2_REJECTED = 2U,
+  SENSOR_ALL_VALID  = 3U,
+  SENSOR_FAULT      = 4U
+} sensor_vote_result_t;
+
 constexpr uint32_t FREQUENCY_CELL_READ_MS = 1000U;
 constexpr uint32_t FREQUENCY_LCD_UPDATE_MS = 1000U;
 constexpr uint32_t FREQUENCY_DIVEMODE_LED_ON_MS = 200U;
@@ -28,6 +36,7 @@ constexpr uint32_t FREQUENCY_DATAMODE_LED_ON_MS = 100U;
 constexpr uint32_t FREQUENCY_DATAMODE_LED_OFF_MS = 400U;
 constexpr uint32_t MAX_CALIBRATION_HOLD_MS = 5000U;
 constexpr uint16_t CALIBRATION_PPO2x1000 = 970U; // See Note 1
+constexpr uint16_t MAX_DEVIATION_FROM_SETPOINT = 100U;
 
 void setup() {
   init_state_t initialisation_state = INIT_BEGIN;
@@ -125,6 +134,64 @@ system_state_t convert_raw_to_ppO2(const uint16_t raw, const uint8_t channel, ui
   if (ppO2 > UINT16_MAX) return STATE_INVALID_PARAMETER;
   *raw_converted_to_ppO2 = (uint16_t)ppO2;
   return STATE_OK;
+}
+
+sensor_vote_result_t get_voted_sensor(uint16_t *voted_ppo2){
+  uint16_t readings[THREE_CELLS] = {0U};
+  const uint8_t SENSOR_0 = 0U;
+  const uint8_t SENSOR_1 = 1U;
+  const uint8_t SENSOR_2 = 2U;
+  const uint8_t AVERAGE_OF_3_SENSORS = 3U;
+  const uint8_t AVERAGE_OF_2_SENSORS = 2U;
+  uint16_t d01;
+  uint16_t d02;
+  uint16_t d12;
+
+  for (uint8_t channel = 0U; channel < THREE_CELLS; channel++){
+    uint16_t raw_reading = 0;
+    
+    if(system_get_cell_reading(&raw_reading, channel) != STATE_OK){
+      return SENSOR_FAULT;
+    }
+    if(convert_raw_to_ppO2(raw_reading, channel, &readings[channel]) != STATE_OK){
+      return SENSOR_FAULT;
+    }
+  }
+  d01 = diff_u16(readings[SENSOR_0], readings[SENSOR_1]);
+  d02 = diff_u16(readings[SENSOR_0], readings[SENSOR_2]);
+  d12 = diff_u16(readings[SENSOR_1], readings[SENSOR_2]);
+  if ((d01 <= MAX_DEVIATION_FROM_SETPOINT) && (d02 <= MAX_DEVIATION_FROM_SETPOINT) && (d12 <= MAX_DEVIATION_FROM_SETPOINT)){
+    *voted_ppo2 = (uint16_t)((readings[SENSOR_0] + readings[SENSOR_1] + readings[SENSOR_2]) / AVERAGE_OF_3_SENSORS);
+    return SENSOR_ALL_VALID;
+  }
+
+  uint8_t pair_a;
+  uint8_t pair_b;
+  sensor_vote_result_t rejected;
+  uint16_t min_deviation;
+
+  pair_a = SENSOR_0;
+  pair_b = SENSOR_1;
+  rejected = SENSOR_2_REJECTED;
+  min_deviation = d01;
+  if(d02 < min_deviation){
+    pair_a = SENSOR_0;
+    pair_b = SENSOR_2;
+    rejected = SENSOR_1_REJECTED;
+    min_deviation = d02;
+  }
+  if(d12 < min_deviation){
+    pair_a = SENSOR_1;
+    pair_b = SENSOR_2;
+    rejected = SENSOR_0_REJECTED;
+    min_deviation = d12;
+  }
+  *voted_ppo2 = (uint16_t)((readings[pair_a] + readings[pair_b]) / AVERAGE_OF_2_SENSORS);
+  return rejected;
+}
+
+static uint16_t diff_u16(uint16_t a, uint16_t b){
+  return (a > b) ? (a - b) : (b - a);
 }
 
 //  1 - FSM Handlers
@@ -324,11 +391,12 @@ display_status_t mode_screen_off(void){
 display_status_t mode_screen_on(void){
   char buffer_mv[FORMATTING_INTEGER_STR_LEN];
   char buffer_ppo2[FORMATTING_HUNDREDTHS_STR_LEN];
-  int16_t current_mv[THREE_CELLS] = {0};
-  uint16_t current_raw = 0U;
+  int16_t cells_mv[THREE_CELLS] = {0};
+  uint16_t cells_raw[THREE_CELLS] = {0U};
+  //uint16_t current_raw = 0U;
   uint16_t current_ppo2 = 0U;
 
-  if(assign_mv(current_mv) != STATE_OK){
+  if(assign_mv(cells_mv) != STATE_OK){
     return DISPLAY_STATUS_INVALID_PARAM;
   }
 
@@ -336,10 +404,10 @@ display_status_t mode_screen_on(void){
   display_font_size(1);
   display_set_cursor(0, 0);
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
-    if(system_get_cell_reading(&current_raw, channel) != STATE_OK){
+    if(system_get_cell_reading(&cells_raw[channel], channel) != STATE_OK){
       // Handle error
     }
-    if(convert_raw_to_ppO2(current_raw, channel, &current_ppo2) != STATE_OK){
+    if(convert_raw_to_ppO2(cells_raw[channel], channel, &current_ppo2) != STATE_OK){
       // Handle error
     }
     format_ppo2_to_text(current_ppo2, buffer_ppo2);
@@ -348,7 +416,7 @@ display_status_t mode_screen_on(void){
   }
   display_println("");
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
-    format_integer_for_display(current_mv[channel], buffer_mv);
+    format_integer_for_display(cells_mv[channel], buffer_mv);
     display_print(buffer_mv);
     display_print("mV ");
   }
@@ -447,10 +515,16 @@ void debug_display_cal_factors(void){
 void debug_test_ppo2_conversion(){
   uint16_t raw_reading = 0U;
   uint16_t ppo2 = 0U;
+  sensor_vote_result_t voted_cell;
+  uint16_t voted_ppo2 = 0;
 
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
     system_get_cell_reading(&raw_reading, channel);
     convert_raw_to_ppO2(raw_reading, channel, &ppo2);
     Serial.println(ppo2);
   }
+
+  voted_cell = get_voted_sensor(&voted_ppo2);
+  Serial.println(voted_cell);
+
 }
