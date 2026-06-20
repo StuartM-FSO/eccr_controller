@@ -392,9 +392,8 @@ display_status_t mode_screen_on(void){
   char buffer_mv[FORMATTING_INTEGER_STR_LEN];
   char buffer_ppo2[FORMATTING_HUNDREDTHS_STR_LEN];
   int16_t cells_mv[THREE_CELLS] = {0};
-  uint16_t cells_raw[THREE_CELLS] = {0U};
-  //uint16_t current_raw = 0U;
-  uint16_t current_ppo2 = 0U;
+  uint16_t cells_ppo2[THREE_CELLS] = {0U};
+  uint16_t current_raw = 0U;
 
   if(assign_mv(cells_mv) != STATE_OK){
     return DISPLAY_STATUS_INVALID_PARAM;
@@ -404,13 +403,13 @@ display_status_t mode_screen_on(void){
   display_font_size(1);
   display_set_cursor(0, 0);
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
-    if(system_get_cell_reading(&cells_raw[channel], channel) != STATE_OK){
+    if(system_get_cell_reading(&current_raw, channel) != STATE_OK){
       // Handle error
     }
-    if(convert_raw_to_ppO2(cells_raw[channel], channel, &current_ppo2) != STATE_OK){
+    if(convert_raw_to_ppO2(current_raw, channel, &cells_ppo2[channel]) != STATE_OK){
       // Handle error
     }
-    format_ppo2_to_text(current_ppo2, buffer_ppo2);
+    format_ppo2_to_text(cells_ppo2[channel], buffer_ppo2);
     display_print(buffer_ppo2);
     display_print(" ");
   }
