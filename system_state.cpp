@@ -7,6 +7,7 @@ typedef struct{
   fsm_state_t fsm_state = FSM_UNINITIALISED;
   uint32_t cell_read_timer = 0U;
   uint32_t lcd_update_timer = 0U;
+  uint32_t divemode_led_timer = 0U;
 } loop_state_t;
 
 typedef struct{
@@ -28,6 +29,7 @@ system_state_t state_init(void){
   current_state.fsm_state = FSM_WAITING;
   current_state.cell_read_timer = 0U;
   current_state.lcd_update_timer = 0U;
+  current_state.divemode_led_timer = 0U;
   current_state.display_on = false;
   current_state.initialised = true;
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){

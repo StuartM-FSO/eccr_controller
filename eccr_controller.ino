@@ -17,6 +17,8 @@ typedef enum{
 
 constexpr uint32_t FREQUENCY_CELL_READ_MS = 1000U;
 constexpr uint32_t FREQUENCY_LCD_UPDATE_MS = 1000U;
+constexpr uint32_t FREQUENCY_DIVEMODE_LED_ON_MS = 100U;
+constexpr uint32_t FREQUENCY_DIVEMODE_LED_OFF_MS = 1000U;
 
 void setup() {
   init_state_t initialisation_state = INIT_BEGIN;
@@ -108,7 +110,6 @@ void fsm_read_cells(uint32_t now){
 void fsm_waiting(uint32_t now){
   uint32_t last_cell_read_time_ms = 0U;
   uint32_t last_lcd_update_time_ms = 0U;
-  bool display_switch_on = gpio_slide_switch_on();
 
   if(system_get_cell_read_timer(&last_cell_read_time_ms) != STATE_OK){
     handle_error();
@@ -119,10 +120,10 @@ void fsm_waiting(uint32_t now){
     return;
   }
   if(has_timer_elapsed(now, last_cell_read_time_ms, FREQUENCY_CELL_READ_MS)){
-    //system_set_cell_read_timer(now);
     system_set_fsm_state(FSM_READ_CELLS);
   }
   if(has_timer_elapsed(now, last_lcd_update_time_ms, FREQUENCY_LCD_UPDATE_MS)){
+    bool display_switch_on = gpio_slide_switch_on();
     if(display_switch_on){
       if(screen_on() != DISPLAY_STATUS_OK){
         // Handle failure
