@@ -20,7 +20,7 @@ constexpr uint32_t FREQUENCY_LCD_UPDATE_MS = 1000U;
 constexpr uint32_t FREQUENCY_DIVEMODE_LED_ON_MS = 200U;
 constexpr uint32_t FREQUENCY_DIVEMODE_LED_OFF_MS = 3000U;
 constexpr uint32_t FREQUENCY_DATAMODE_LED_ON_MS = 100U;
-constexpr uint32_t FREQUENCY_DATAMODE_LED_OFF_MS = 200U;
+constexpr uint32_t FREQUENCY_DATAMODE_LED_OFF_MS = 400U;
 
 void setup() {
   init_state_t initialisation_state = INIT_BEGIN;
