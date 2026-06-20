@@ -106,23 +106,30 @@ void fsm_read_cells(uint32_t now){
 
 void fsm_waiting(uint32_t now){
   uint32_t last_cell_read_time_ms = 0U;
+  uint32_t last_lcd_update_time_ms = 0U;
   bool display_switch_on = gpio_slide_switch_on();
 
   if(system_get_cell_read_timer(&last_cell_read_time_ms) != STATE_OK){
+    handle_error();
+  }
+  if(system_get_lcd_update_timer(&last_lcd_update_time_ms) != STATE_OK){
     handle_error();
   }
   if(has_timer_elapsed(now, last_cell_read_time_ms, FREQUENCY_CELL_READ_MS)){
     //system_set_cell_read_timer(now);
     system_set_fsm_state(FSM_READ_CELLS);
   }
-  if(display_switch_on){
-    if(screen_on() != DISPLAY_STATUS_OK){
-      // Handle failure
+  if(has_timer_elapsed(now, last_lcd_update_time_ms, 100)){
+    if(display_switch_on){
+      if(screen_on() != DISPLAY_STATUS_OK){
+        // Handle failure
+      }
+    } else {
+      if(screen_off() != DISPLAY_STATUS_OK){
+        // Handle failure
+      }
     }
-  } else {
-    if(screen_off() != DISPLAY_STATUS_OK){
-      // Handle failure
-    }
+    system_set_lcd_update_timer(now);
   }
 }
 

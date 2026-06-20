@@ -33,6 +33,9 @@ system_state_t system_set_fsm_state(const fsm_state_t state);
 system_state_t system_get_cell_read_timer(uint32_t * const timer);
 system_state_t system_set_cell_read_timer(const uint32_t timer);
 
+system_state_t system_get_lcd_update_timer(uint32_t * const timer);
+system_state_t system_set_lcd_update_timer(const uint32_t timer);
+
 system_state_t system_get_cell_read_ready(bool * const ready);
 system_state_t system_set_cell_read_ready(const bool state);
 
