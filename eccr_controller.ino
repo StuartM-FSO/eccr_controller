@@ -3,6 +3,7 @@
 #include "adc_hal.h"
 #include "gpio_hal.h"
 #include "display_hal.h"
+#include "format_for_print.h"
 #include <Wire.h>
 
 typedef enum{
@@ -75,6 +76,7 @@ void loop() {
 //  0 - Work in progress
 //  1 - FSM Handlers
 //  2 - Cell handling
+//  3 - Display
 
 //  0 - Work in progress
 
@@ -114,13 +116,13 @@ void fsm_waiting(uint32_t now){
     system_set_fsm_state(FSM_READ_CELLS);
   }
   if(display_switch_on){
-    display_clear();
-    display_set_cursor(0, 0);
-    display_println("ON");
-    display_update();
+    if(screen_on() != DISPLAY_STATUS_OK){
+      // Handle failure
+    }
   } else {
-    display_clear();
-    display_update();
+    if(screen_off() != DISPLAY_STATUS_OK){
+      // Handle failure
+    }
   }
 }
 
@@ -140,6 +142,21 @@ system_state_t cell_read(void){
   return STATE_OK;
 }
 
+
+//  3 - Display
+display_status_t screen_off(void){
+  display_clear();
+  return display_update();
+}
+
+display_status_t screen_on(void){
+  display_clear();
+  display_font_size(1);
+  display_set_cursor(0, 0);
+  display_println("xxx");
+  display_print("10mV 10mV 10mV");
+  return display_update();
+}
 
 
 // DEBUG
