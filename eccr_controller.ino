@@ -304,7 +304,10 @@ void fsm_calibration_activated(const uint32_t now){
     display_set_cursor(0, 0);
     display_println("HOLD TO");
     display_println("CALIBRATE");
-    display_update();
+    if(display_update() != DISPLAY_STATUS_OK){
+      Serial.println("Failed fsm_calibration_active");
+      handle_error();
+    }
     system_set_screen_written_once(true);
   }
 }
@@ -331,7 +334,10 @@ void fsm_calibration_writing(const uint32_t now){
   display_clear();
   display_set_cursor(0, 0);
   display_println("WRITING");
-  display_update();
+  if(display_update() != DISPLAY_STATUS_OK){
+    Serial.println("Failed fsm_calibration_writing");
+    handle_error();
+  }
 }
 
 //  2 - Cell handling
