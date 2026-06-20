@@ -181,7 +181,7 @@ system_state_t system_get_divemode_led_timer(uint32_t *timer){
   return STATE_OK;
 }
 
-system_state_t system_set_divemode_timer(const uint32_t timer){
+system_state_t system_set_divemode_led_timer(const uint32_t timer){
   if(!current_state.initialised){
     return STATE_UNINITIALISED;
   }
