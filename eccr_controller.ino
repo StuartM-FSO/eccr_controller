@@ -16,6 +16,7 @@ typedef enum{
 } init_state_t;
 
 constexpr uint32_t FREQUENCY_CELL_READ_MS = 1000U;
+constexpr uint32_t FREQUENCY_LCD_UPDATE_MS = 1000U;
 
 void setup() {
   init_state_t initialisation_state = INIT_BEGIN;
@@ -93,7 +94,6 @@ void fsm_read_cells(uint32_t now){
     Serial.println("Failed at cell read");
     handle_error();
   }
-  system_set_fsm_state(FSM_WAITING);
   if(system_set_cell_read_timer(now) != STATE_OK){
     system_set_fsm_state(FSM_FAILED_SAFE);
     return;
@@ -102,6 +102,7 @@ void fsm_read_cells(uint32_t now){
     system_set_fsm_state(FSM_FAILED_SAFE);
     return;
   }
+  system_set_fsm_state(FSM_WAITING);
 }
 
 void fsm_waiting(uint32_t now){
@@ -111,15 +112,17 @@ void fsm_waiting(uint32_t now){
 
   if(system_get_cell_read_timer(&last_cell_read_time_ms) != STATE_OK){
     handle_error();
+    return;
   }
   if(system_get_lcd_update_timer(&last_lcd_update_time_ms) != STATE_OK){
     handle_error();
+    return;
   }
   if(has_timer_elapsed(now, last_cell_read_time_ms, FREQUENCY_CELL_READ_MS)){
     //system_set_cell_read_timer(now);
     system_set_fsm_state(FSM_READ_CELLS);
   }
-  if(has_timer_elapsed(now, last_lcd_update_time_ms, 100)){
+  if(has_timer_elapsed(now, last_lcd_update_time_ms, FREQUENCY_LCD_UPDATE_MS)){
     if(display_switch_on){
       if(screen_on() != DISPLAY_STATUS_OK){
         // Handle failure
@@ -171,7 +174,7 @@ display_status_t screen_off(void){
   return display_update();
 }
 
-display_status_t screen_on(){
+display_status_t screen_on(void){
   char buffer_mv[FORMATTING_INTEGER_STR_LEN];
   int16_t current_mv[THREE_CELLS] = {0};
 
