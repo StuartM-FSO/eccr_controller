@@ -111,7 +111,7 @@ void fsm_waiting(uint32_t now){
   uint32_t last_cell_read_time_ms = 0U;
   uint32_t last_lcd_update_time_ms = 0U;
   uint32_t divemode_led_timer_ms = 0U;
-  
+  bool divemode_led_on = false;
 
   if(system_get_cell_read_timer(&last_cell_read_time_ms) != STATE_OK){
     handle_error();
@@ -122,6 +122,10 @@ void fsm_waiting(uint32_t now){
     return;
   }
   if(system_get_divemode_led_timer(&divemode_led_timer_ms) != STATE_OK){
+    handle_error();
+    return;
+  }
+  if(system_get_divemode_led_on(&divemode_led_on) != STATE_OK){
     handle_error();
     return;
   }
@@ -255,4 +259,19 @@ void debug_test_momentary_switch(){
   switchstate_t switch_state = gpio_momentary_pushed();
 
   Serial.println(switch_state);
+}
+
+void debug_flash_led(){
+  gpio_led_on(true);
+  delay(5000);
+  gpio_led_on(false);
+  delay(1000);
+  gpio_led_on(true);
+  delay(5000);
+  gpio_led_on(false);
+  delay(1000);
+  gpio_led_on(true);
+  delay(5000);
+  gpio_led_on(false);
+  delay(1000);
 }

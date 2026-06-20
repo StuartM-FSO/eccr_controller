@@ -22,5 +22,6 @@ gpiostate_t gpio_init(void);
 switchstate_t gpio_slide_switch_on(void);
 switchstate_t gpio_momentary_pushed(void);
 void gpio_led_flash_error_state(const uint8_t error);
+void gpio_led_on(const bool state);
 
 #endif

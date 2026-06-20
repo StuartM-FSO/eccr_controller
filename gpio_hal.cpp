@@ -89,6 +89,10 @@ void gpio_led_flash_error_state(const uint8_t error){
   }
 }
 
+void gpio_led_on(const bool state){
+  gpio_led_write(!state);
+}
+
 // Private functions
 
 static void gpio_led_write(const bool led_on){
