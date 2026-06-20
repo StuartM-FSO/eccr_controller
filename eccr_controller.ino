@@ -104,6 +104,7 @@ void fsm_read_cells(uint32_t now){
 
 void fsm_waiting(uint32_t now){
   uint32_t last_cell_read_time_ms = 0U;
+  bool display_switch_on = false;
 
   if(system_get_cell_read_timer(&last_cell_read_time_ms) != STATE_OK){
     handle_error();
@@ -112,6 +113,7 @@ void fsm_waiting(uint32_t now){
     //system_set_cell_read_timer(now);
     system_set_fsm_state(FSM_READ_CELLS);
   }
+
 }
 
 //  2 - Cell handling
@@ -173,13 +175,13 @@ void debug_test_display(){
 }
 
 void debug_test_slide_switch(){
-  switchstate_t switch_state = gpio_calibration_switch_on();
+  switchstate_t switch_state = gpio_slide_switch_on();
 
   Serial.println(switch_state);
 }
 
 void debug_test_momentary_switch(){
-  switchstate_t switch_state = gpio_select_button_pressed();
+  switchstate_t switch_state = gpio_momentary_pushed();
 
   Serial.println(switch_state);
 }

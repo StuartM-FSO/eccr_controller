@@ -19,8 +19,8 @@ typedef enum
 } switchstate_t;
 
 gpiostate_t gpio_init(void);
-switchstate_t gpio_calibration_switch_on(void);
-switchstate_t gpio_select_button_pressed(void);
+switchstate_t gpio_slide_switch_on(void);
+switchstate_t gpio_momentary_pushed(void);
 void gpio_led_flash_error_state(const uint8_t error);
 
 #endif

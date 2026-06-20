@@ -41,7 +41,7 @@ gpiostate_t gpio_init(void){
   return GPIO_STATUS_OK;
 }
 
-switchstate_t gpio_calibration_switch_on(void){  // See Note 3
+switchstate_t gpio_slide_switch_on(void){  // See Note 3
   uint8_t state;
 
   if(!gpio_state.initialised){
@@ -55,7 +55,7 @@ switchstate_t gpio_calibration_switch_on(void){  // See Note 3
   }
 }
 
-switchstate_t gpio_select_button_pressed(void){ // See Note 3
+switchstate_t gpio_momentary_pushed(void){ // See Note 3
   uint8_t state;
 
   if(!gpio_state.initialised){
