@@ -20,6 +20,8 @@ typedef enum{
   FSM_FAILED_SAFE,
   FSM_UNINITIALISED,
   FSM_READ_CELLS,
+  FSM_CALIBRATION_ACTIVATED,
+  FSM_CALIBRATION_WRITING,
   FSM_END_COUNT // DO NOT ADD STATES BEYOND THIS
 } fsm_state_t;
 
@@ -38,6 +40,9 @@ system_state_t system_set_lcd_update_timer(const uint32_t timer);
 
 system_state_t system_get_divemode_led_timer(uint32_t * const timer);
 system_state_t system_set_divemode_led_timer(const uint32_t timer);
+
+system_state_t system_get_calibration_write_timer(uint32_t * const timer);
+system_state_t system_set_calibration_write_timer(const uint32_t timer);
 
 system_state_t system_get_cell_read_ready(bool * const ready);
 system_state_t system_set_cell_read_ready(const bool state);

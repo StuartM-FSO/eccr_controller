@@ -10,6 +10,7 @@ typedef struct{
   uint32_t cell_read_timer = 0U;
   uint32_t lcd_update_timer = 0U;
   uint32_t divemode_led_timer = 0U;
+  uint32_t calibration_write_timer = 0U;
 } loop_state_t;
 
 typedef struct{
@@ -33,6 +34,7 @@ system_state_t state_init(void){
   current_state.lcd_update_timer = 0U;
   current_state.divemode_led_timer = 0U;
   current_state.divemode_led_on = false;
+  current_state.calibration_write_timer = 0U;
   current_state.display_on = false;
   current_state.initialised = true;
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
@@ -231,6 +233,25 @@ system_state_t system_set_calibration_factor(const uint16_t calibration_factor, 
     return STATE_INVALID_PARAMETER;
   }
   current_state.cell_calibration_factor[channel] = calibration_factor;
+  return STATE_OK;
+}
+
+system_state_t system_get_calibration_write_timer(uint32_t *timer){
+  if(!current_state.initialised){
+    return STATE_UNINITIALISED;
+  }
+  if(timer == NULL){
+    return STATE_INVALID_PARAMETER;
+  }
+  *timer = current_state.calibration_write_timer;
+  return STATE_OK;
+}
+
+system_state_t system_set_calibration_write_timer(const uint32_t timer){
+  if(!current_state.initialised){
+    return STATE_UNINITIALISED;
+  }
+  current_state.calibration_write_timer = timer;
   return STATE_OK;
 }
 

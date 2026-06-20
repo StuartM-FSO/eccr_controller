@@ -87,6 +87,12 @@ void loop() {
     case FSM_READ_CELLS:
       fsm_read_cells(now);
       break;
+    case FSM_CALIBRATION_ACTIVATED:
+      fsm_calibration_activated(now);
+      break;
+    case FSM_CALIBRATION_WRITING:
+      fsm_calibration_writing(now);
+      break;
     default:
       system_set_fsm_state(FSM_FAILED_SAFE);
       break;
@@ -122,7 +128,7 @@ system_state_t convert_raw_to_ppO2(const uint16_t raw, const uint8_t channel, ui
 
 //  1 - FSM Handlers
 
-void fsm_read_cells(uint32_t now){
+void fsm_read_cells(const uint32_t now){
   if(system_set_cell_read_ready(false) != STATE_OK){
     system_set_fsm_state(FSM_FAILED_SAFE);
     return;
@@ -141,16 +147,22 @@ void fsm_read_cells(uint32_t now){
   }
   system_set_fsm_state(FSM_WAITING);
 
-  debug_test_ppo2_conversion();
+  //debug_test_ppo2_conversion();
 }
 
-void fsm_waiting(uint32_t now){
+void fsm_waiting(const uint32_t now){
   uint32_t last_cell_read_time_ms = 0U;
   uint32_t last_lcd_update_time_ms = 0U;
   uint32_t divemode_led_timer_ms = 0U;
   uint32_t divemode_flash_interval_ms = 0U;
   bool divemode_led_on = false;
   bool display_switch_on = gpio_slide_switch_on();
+  bool calibration_button_down = gpio_momentary_pushed();
+
+  if(display_switch_on && calibration_button_down){
+    system_set_fsm_state(FSM_CALIBRATION_ACTIVATED);
+    return;
+  }
 
   if(system_get_cell_read_timer(&last_cell_read_time_ms) != STATE_OK){
     handle_error();
@@ -196,6 +208,41 @@ void fsm_waiting(uint32_t now){
     system_set_divemode_led_on(divemode_led_on);
     system_set_divemode_led_timer(now);
   }
+}
+
+void fsm_calibration_activated(const uint32_t now){
+  if(!gpio_slide_switch_on()){
+    system_set_fsm_state(FSM_WAITING);
+    return;
+  }
+  display_clear();
+  //display_font_size(2);
+  display_set_cursor(0, 0);
+  display_print("RELEASE TO");
+  display_print("CALIBRATE");
+  display_update();
+  if(!gpio_momentary_pushed()){
+    system_set_calibration_write_timer(now);
+    system_set_fsm_state(FSM_CALIBRATION_WRITING);
+    return;
+  }
+}
+
+void fsm_calibration_writing(const uint32_t now){
+  uint32_t last_ms = 0U;
+
+  if(system_get_calibration_write_timer(&last_ms) != STATE_OK){
+    handle_error();
+    Serial.println("Failed at cal write");
+  }
+  if(has_timer_elapsed(now, last_ms, 3000U)){
+    system_set_fsm_state(FSM_WAITING);
+    return;
+  }
+  display_clear();
+  display_set_cursor(0, 0);
+  display_println("WRITING");
+  display_update();
 }
 
 //  2 - Cell handling
