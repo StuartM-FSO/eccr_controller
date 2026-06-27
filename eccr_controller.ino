@@ -7,7 +7,6 @@
 #include "gpio_hal.h"
 #include "display_hal.h"
 #include "format_for_print.h"
-#include "eeprom_hal_basic.h"
 #include <Wire.h>
 
 typedef enum{
