@@ -7,6 +7,7 @@
 #include "gpio_hal.h"
 #include "display_hal.h"
 #include "format_for_print.h"
+#include "eeprom_hal.h"
 #include <Wire.h>
 
 typedef enum{
@@ -51,7 +52,7 @@ void setup() {
     initialisation_state = INIT_FAILED_GPIO;
   } else if(display_init() != DISPLAY_STATUS_OK){
     initialisation_state = INIT_FAILED_DISPLAY;
-  } else if(eeprom_hal_init(LOW_OUTPUT_CELL) != MEM_OK){
+  } else if(eeprom_init() != MEM_OK){
     initialisation_state = INIT_FAILED_EEPROM;
   } else {
     initialisation_state = INIT_SUCCESS;
@@ -324,8 +325,9 @@ void fsm_calibration_writing(const uint32_t now){
       system_get_cell_reading(&raw_reading[channel], channel);
       system_set_calibration_factor(raw_reading[channel], channel);
     }
-    if(eeprom_hal_write_array(raw_reading) != MEM_OK){
-      // Handle error
+    if(eeprom_write_calibration(raw_reading) != MEM_OK){
+      Serial.println("Cal write failed");
+      handle_error();
     }
     system_set_fsm_state(FSM_WAITING);
     return;
@@ -373,10 +375,9 @@ system_state_t assign_mv(int16_t cell_reading_mv[]){
 system_state_t assign_cell_calibration_factors(void){
   uint16_t temp_calibration_factors[THREE_CELLS];
 
-  if(eeprom_hal_read_array(temp_calibration_factors) != MEM_OK){
-    Serial.println("---");
+  if(eeprom_read_calibration(temp_calibration_factors) != MEM_OK){
+    Serial.println("Cal read failed");
     handle_error();
-    return STATE_FAILED_READ;
   }
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
     if(system_set_calibration_factor(temp_calibration_factors[channel], channel) != STATE_OK){
@@ -500,26 +501,7 @@ void debug_flash_led(){
   delay(1000);
 }
 
-void debug_test_eeprom(){
-  uint16_t test[THREE_CELLS];
-  uint16_t read[THREE_CELLS] = {0};
 
-  test[0] = 1234;
-  test[1] = 2468;
-  test[2] = 3579;
-
-  Serial.println(eeprom_hal_write_array(test));
-  Serial.println(eeprom_hal_read_array(read));
-
-  Serial.println(read[0]);
-
-  system_set_calibration_factor(test[0], 0);
-  
-  uint16_t testRead = 0;
-  system_get_calibration_factor(&testRead, 0);
-  Serial.println(testRead);
-
-}
 
 void debug_display_cal_factors(void){
   uint16_t read = 0;

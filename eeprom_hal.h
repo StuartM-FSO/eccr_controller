@@ -1,4 +1,4 @@
-#include <sys/_stdint.h>
+
 #ifndef EEPROM_HAL_H
 #define EEPROM_HAL_H
 
