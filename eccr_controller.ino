@@ -405,11 +405,11 @@ display_status_t mode_screen_on(void){
 
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
     if(system_get_cell_reading(&raw_reading, channel) != STATE_OK){
-      Serial.print("Failed mode_screen_on");
+      Serial.print("Failed mode_screen_on 1");
       handle_error();
     }
     if(convert_raw_to_ppO2(raw_reading, channel, &cells_ppo2[channel]) != STATE_OK){
-      Serial.print("Failed mode_screen_on");
+      Serial.print("Failed mode_screen_on 2");
       handle_error();
     }
     cells_mv[channel] = (uint16_t)adc_convert_raw_to_mV(raw_reading);
