@@ -415,6 +415,29 @@ system_state_t print_ppo2_top_line_oled(uint16_t cells_ppo2[], sensor_vote_resul
   return STATE_OK;
 }
 
+system_state_t print_mv_bottom_line_oled(uint16_t cells_mv[], sensor_vote_result_t voted_cell){
+  char buffer_mv[FORMATTING_INTEGER_STR_LEN];
+
+  if(cells_mv == NULL){
+    return STATE_INVALID_PARAMETER;
+  }
+  if(voted_cell >= SENSOR_COUNT_END){
+    return STATE_INVALID_PARAMETER;
+  }
+
+  for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
+    if(voted_cell == channel){
+      display_set_colour(DISPLAY_BLACK, DISPLAY_WHITE);
+    }
+    format_integer_for_display(cells_mv[channel], buffer_mv);
+    display_print(buffer_mv);
+    display_print("mV");
+    display_set_colour(DISPLAY_WHITE, DISPLAY_BLACK);
+    display_print(" ");
+  }
+  return STATE_OK;
+}
+
 display_status_t mode_screen_on(void){
   uint16_t raw_reading = 0U;
   uint16_t cells_ppo2[THREE_CELLS] = {0U};
@@ -422,7 +445,7 @@ display_status_t mode_screen_on(void){
   sensor_vote_result_t voted_cell;
   uint16_t voted_ppo2;
   //char buffer_ppo2[FORMATTING_PPO2_STR_LEN];
-  char buffer_mv[FORMATTING_INTEGER_STR_LEN];
+  //char buffer_mv[FORMATTING_INTEGER_STR_LEN];
 
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
     if(system_get_cell_reading(&raw_reading, channel) != STATE_OK){
@@ -448,15 +471,9 @@ display_status_t mode_screen_on(void){
     handle_error();
   }
   display_println("");
-  for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
-    if(voted_cell == channel){
-      display_set_colour(DISPLAY_BLACK, DISPLAY_WHITE);
-    }
-    format_integer_for_display(cells_mv[channel], buffer_mv);
-    display_print(buffer_mv);
-    display_print("mV");
-    display_set_colour(DISPLAY_WHITE, DISPLAY_BLACK);
-    display_print(" ");
+  if(print_mv_bottom_line_oled(cells_mv, voted_cell) != STATE_OK){
+    Serial.println("print_mv in mode_screen_on");
+    handle_error();
   }
   if(display_update() != DISPLAY_STATUS_OK){
     return DISPLAY_STATUS_HW_ERROR;
