@@ -25,7 +25,8 @@ typedef enum {
   SENSOR_1_REJECTED = 1U,
   SENSOR_2_REJECTED = 2U,
   SENSOR_ALL_VALID  = 3U,
-  SENSOR_FAULT      = 4U
+  SENSOR_FAULT      = 4U,
+  SENSOR_COUNT_END // Do not add types beyond this
 } sensor_vote_result_t;
 
 constexpr uint32_t FREQUENCY_CELL_READ_MS = 1000U;
@@ -393,8 +394,28 @@ display_status_t mode_screen_off(void){
   return display_update();
 }
 
-system_state_t print_ppo2_top_line_oled(uint16_t cells_ppo2[], uint8_t voted_cell){
-  
+system_state_t print_ppo2_top_line_oled(uint16_t cells_ppo2[], sensor_vote_result_t voted_cell){
+  char buffer_ppo2[FORMATTING_PPO2_STR_LEN];
+
+  if(cells_ppo2 == NULL){
+    return STATE_INVALID_PARAMETER;
+  }
+  if(voted_cell >= SENSOR_COUNT_END){
+    return STATE_INVALID_PARAMETER;
+  }
+
+  for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
+    if(voted_cell == channel){
+      display_set_colour(DISPLAY_BLACK, DISPLAY_WHITE);
+    }
+    format_ppo2_to_text(cells_ppo2[channel], buffer_ppo2);
+    display_print(buffer_ppo2);
+    display_set_colour(DISPLAY_WHITE, DISPLAY_BLACK);
+    display_print(" ");
+  }
+
+
+
   return STATE_OK;
 }
 
@@ -404,7 +425,7 @@ display_status_t mode_screen_on(void){
   uint16_t cells_mv[THREE_CELLS] = {0U};
   sensor_vote_result_t voted_cell;
   uint16_t voted_ppo2;
-  char buffer_ppo2[FORMATTING_PPO2_STR_LEN];
+  //char buffer_ppo2[FORMATTING_PPO2_STR_LEN];
   char buffer_mv[FORMATTING_INTEGER_STR_LEN];
 
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
@@ -419,18 +440,14 @@ display_status_t mode_screen_on(void){
     cells_mv[channel] = (uint16_t)adc_convert_raw_to_mV(raw_reading);
   }
   voted_cell = get_voted_sensor(&voted_ppo2);
+  if(voted_cell == SENSOR_FAULT){
+    Serial.println("voted cell fault");
+    handle_error();
+  }
   display_clear();
   display_set_cursor(0, 0);
   display_font_size(1);
-  for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
-    if(voted_cell == channel){
-      display_set_colour(DISPLAY_BLACK, DISPLAY_WHITE);
-    }
-    format_ppo2_to_text(cells_ppo2[channel], buffer_ppo2);
-    display_print(buffer_ppo2);
-    display_set_colour(DISPLAY_WHITE, DISPLAY_BLACK);
-    display_print(" ");
-  }
+  print_ppo2_top_line_oled(cells_ppo2, voted_cell);
   display_println("");
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
     if(voted_cell == channel){
