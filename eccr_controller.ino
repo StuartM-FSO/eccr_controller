@@ -45,7 +45,6 @@ constexpr uint16_t CALIBRATION_ACCEPTABLE_LIMIT_MAXIMUM_RAW = 10000U; // Limit t
 
 void setup() {
   init_state_t initialisation_state = INIT_BEGIN;
-  fsm_state_t state_after_init = FSM_UNINITIALISED;
   Wire.begin();
 
   serial_begin(9600);
