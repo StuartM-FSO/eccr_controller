@@ -407,7 +407,7 @@ system_state_t convert_raw_to_ppO2(const uint16_t raw, const uint8_t channel, ui
   }
   temp = ((uint32_t)raw) * scale;
   ppO2 = temp / reference_value;
-  if (ppO2 > UINT16_MAX) return STATE_INVALID_PARAMETER;
+  if (ppO2 > UINT16_MAX) return STATE_OVERFLOW;
   *raw_converted_to_ppO2 = (uint16_t)ppO2;
   return STATE_OK;
 }
