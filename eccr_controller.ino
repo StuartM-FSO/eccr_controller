@@ -219,7 +219,7 @@ void fsm_waiting(const uint32_t now){
   if(display_switch_on){
     divemode_flash_interval_ms = (divemode_led_on) ? FREQUENCY_DATAMODE_LED_ON_MS : FREQUENCY_DATAMODE_LED_OFF_MS;
     if(has_timer_elapsed(now, last_lcd_update_time_ms, FREQUENCY_LCD_UPDATE_MS)){
-      if(display_handler_screen_on(cells_raw) != DISPLAY_STATUS_OK){
+      if(display_handler_screen_on(cells_raw, initial_calibration_required) != DISPLAY_STATUS_OK){
         Serial.println("display_handler_on failed in fsm_waiting");
         handle_error();
       }
@@ -503,41 +503,33 @@ system_state_t print_mv_bottom_line_oled(uint16_t cells_mv[], sensor_vote_result
   return STATE_OK;
 }
 
-display_status_t display_handler_screen_on(uint16_t cells_raw[]){
+display_status_t display_handler_screen_on(uint16_t cells_raw[], bool calibration_required){
   uint16_t raw_reading = 0U;
   uint16_t cells_ppo2[THREE_CELLS] = {0U};
   uint16_t cells_mv[THREE_CELLS] = {0U};
   sensor_vote_result_t voted_cell;
   uint16_t voted_ppo2;
   system_state_t conversion_status = STATE_UNINITIALISED;
-  bool requires_calibration = false;
+  //bool requires_calibration = false;
 
   if(cells_raw == NULL){
     return DISPLAY_STATUS_INVALID_PARAM;
   }
 
-  for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
-    conversion_status = convert_raw_to_ppO2(cells_raw[channel], channel, &cells_ppo2[channel]);
-    switch (conversion_status) {
-      case STATE_OK:
-        requires_calibration = false;
-        break;
-      case STATE_REQUIRES_CALIBRATION:
-        requires_calibration = true;
-        break;
-      default:
-        Serial.println("Conversion failed mode_screen_on");
-        handle_error();
-        break;
-    }
-    cells_mv[channel] = (uint16_t)adc_convert_raw_to_mV(cells_raw[channel]);
-  }
   display_clear();
   display_set_cursor(0, 0);
   display_font_size(1);
-  if(requires_calibration){
-    display_println("Requires calibration");
+
+  if(calibration_required){
+    display_println("CALIBRATION REQUIRED");
   } else {
+    for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
+      if(convert_raw_to_ppO2(cells_raw[channel], channel, &cells_ppo2[channel]) != STATE_OK){
+        Serial.println("Conversion failed in display_handler_screen_on");
+        handle_error();
+      }
+      cells_mv[channel] = (uint16_t)adc_convert_raw_to_mV(cells_raw[channel]);
+    }
     voted_cell = get_voted_sensor(&voted_ppo2);
     if(voted_cell == SENSOR_FAULT){
       Serial.println("voted cell fault");
@@ -553,7 +545,6 @@ display_status_t display_handler_screen_on(uint16_t cells_raw[]){
       handle_error();
     }
   }
-  
   if(display_update() != DISPLAY_STATUS_OK){
     return DISPLAY_STATUS_HW_ERROR;
   }
