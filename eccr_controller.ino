@@ -281,7 +281,7 @@ void fsm_calibration_writing(const uint32_t now){
     Serial.println("Failed at cal write");
     handle_error();
   }
-  if(has_timer_elapsed(now, last_ms, 3000U) && !gpio_momentary_pushed()){
+  if(has_timer_elapsed(now, last_ms, (ONE_SECOND_MS * 3)) && !gpio_momentary_pushed()){
     for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
       system_get_cell_reading(&raw_reading[channel], channel);
       system_set_calibration_factor(raw_reading[channel], channel);
@@ -328,8 +328,8 @@ system_state_t helper_assign_current_cell_raw_to_array(uint16_t cells_raw[]){
   return STATE_OK;
 }
 
-sensor_vote_result_t get_voted_sensor(uint16_t *voted_ppo2){
-  if(voted_ppo2 == NULL){
+sensor_vote_result_t get_voted_sensor(uint16_t cells_raw[], uint16_t *voted_ppo2){
+  if((voted_ppo2 == NULL) || (cells_raw == NULL)){
     return SENSOR_FAULT;
   }
 
@@ -342,14 +342,10 @@ sensor_vote_result_t get_voted_sensor(uint16_t *voted_ppo2){
   uint16_t d01;
   uint16_t d02;
   uint16_t d12;
+  uint16_t raw_reading = 0U;
 
-  for (uint8_t channel = 0U; channel < THREE_CELLS; channel++){
-    uint16_t raw_reading = 0;
-    
-    if(system_get_cell_reading(&raw_reading, channel) != STATE_OK){
-      return SENSOR_FAULT;
-    }
-    if(convert_raw_to_ppO2(raw_reading, channel, &readings[channel]) != STATE_OK){
+  for (uint8_t channel = 0U; channel < THREE_CELLS; channel++){    
+    if(convert_raw_to_ppO2(cells_raw[channel], channel, &readings[channel]) != STATE_OK){
       return SENSOR_FAULT;
     }
   }
@@ -508,13 +504,10 @@ system_state_t print_mv_bottom_line_oled(uint16_t cells_mv[], sensor_vote_result
 }
 
 display_status_t display_handler_screen_on(uint16_t cells_raw[], bool calibration_required){
-  uint16_t raw_reading = 0U;
   uint16_t cells_ppo2[THREE_CELLS] = {0U};
   uint16_t cells_mv[THREE_CELLS] = {0U};
   sensor_vote_result_t voted_cell;
   uint16_t voted_ppo2;
-  system_state_t conversion_status = STATE_UNINITIALISED;
-  //bool requires_calibration = false;
 
   if(cells_raw == NULL){
     return DISPLAY_STATUS_INVALID_PARAM;
@@ -534,7 +527,7 @@ display_status_t display_handler_screen_on(uint16_t cells_raw[], bool calibratio
       }
       cells_mv[channel] = (uint16_t)adc_convert_raw_to_mV(cells_raw[channel]);
     }
-    voted_cell = get_voted_sensor(&voted_ppo2);
+    voted_cell = get_voted_sensor(cells_raw, &voted_ppo2);
     if(voted_cell == SENSOR_FAULT){
       Serial.println("voted cell fault");
       handle_error();
@@ -623,19 +616,3 @@ void debug_display_cal_factors(void){
   }
 }
 
-void debug_test_ppo2_conversion(){
-  uint16_t raw_reading = 0U;
-  uint16_t ppo2 = 0U;
-  sensor_vote_result_t voted_cell;
-  uint16_t voted_ppo2 = 0;
-
-  for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
-    system_get_cell_reading(&raw_reading, channel);
-    convert_raw_to_ppO2(raw_reading, channel, &ppo2);
-    Serial.println(ppo2);
-  }
-
-  voted_cell = get_voted_sensor(&voted_ppo2);
-  Serial.println(voted_cell);
-
-}
