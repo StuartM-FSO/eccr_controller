@@ -148,7 +148,7 @@ void fsm_read_cells(const uint32_t now){
   //debug_test_ppo2_conversion();
 }
 
-system_state_t helper_assign_current_cell_read_to_array(uint16_t cells_raw[]){
+system_state_t helper_assign_current_cell_raw_to_array(uint16_t cells_raw[]){
   bool cell_read_ready = false;
   
   if(cells_raw == NULL){
@@ -172,6 +172,8 @@ system_state_t helper_assign_current_cell_read_to_array(uint16_t cells_raw[]){
   return STATE_OK;
 }
 
+
+
 void fsm_waiting(const uint32_t now){
   uint32_t last_cell_read_time_ms = 0U;
   uint32_t last_lcd_update_time_ms = 0U;
@@ -179,6 +181,7 @@ void fsm_waiting(const uint32_t now){
   uint32_t divemode_flash_interval_ms = 0U;
   uint16_t cells_raw[THREE_CELLS] = {0U};
   uint16_t calibration_raw[THREE_CELLS] = {0U};
+  uint16_t cells_po2[THREE_CELLS] = {0U};
   bool divemode_led_on = false;
   bool display_switch_on = gpio_slide_switch_on();
   bool calibration_button_down = gpio_momentary_pushed();
@@ -189,7 +192,7 @@ void fsm_waiting(const uint32_t now){
     return;
   }
 
-  if(helper_assign_current_cell_read_to_array(cells_raw) != STATE_OK){
+  if(helper_assign_current_cell_raw_to_array(cells_raw) != STATE_OK){
     Serial.println("cell assignment error in fsm_waiting");
     handle_error();
   }
