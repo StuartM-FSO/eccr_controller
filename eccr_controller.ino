@@ -420,21 +420,6 @@ system_state_t cell_read(void){
   return STATE_OK;
 }
 
-system_state_t assign_mv(int16_t cell_reading_mv[]){
-  uint16_t reading_raw = 0;
-
-  if(cell_reading_mv == NULL){
-    return STATE_INVALID_PARAMETER;
-  }
-  for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
-    if(system_get_cell_reading(&reading_raw, channel) != STATE_OK){
-      return STATE_FUNCTION_FAILED;
-    }
-    cell_reading_mv[channel] = adc_convert_raw_to_mV(reading_raw);
-  }
-  return STATE_OK;
-}
-
 system_state_t assign_cell_calibration_factors(void){
   uint16_t temp_calibration_factors[THREE_CELLS];
 
