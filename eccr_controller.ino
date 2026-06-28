@@ -180,8 +180,6 @@ void fsm_waiting(const uint32_t now){
   uint32_t divemode_led_timer_ms = 0U;
   uint32_t divemode_flash_interval_ms = 0U;
   uint16_t cells_raw[THREE_CELLS] = {0U};
-  uint16_t calibration_raw[THREE_CELLS] = {0U};
-  uint16_t cells_po2[THREE_CELLS] = {0U};
   bool divemode_led_on = false;
   bool display_switch_on = gpio_slide_switch_on();
   bool calibration_button_down = gpio_momentary_pushed();
@@ -196,9 +194,6 @@ void fsm_waiting(const uint32_t now){
     Serial.println("cell assignment error in fsm_waiting");
     handle_error();
   }
-
-
-
   if(system_get_cell_read_timer(&last_cell_read_time_ms) != STATE_OK){
     handle_error();
     return;
@@ -224,7 +219,6 @@ void fsm_waiting(const uint32_t now){
 
   if(has_timer_elapsed(now, last_cell_read_time_ms, FREQUENCY_CELL_READ_MS)){
     system_set_fsm_state(FSM_READ_CELLS);
-    //debug_test_ppo2_conversion();
   }
   if(has_timer_elapsed(now, last_lcd_update_time_ms, FREQUENCY_LCD_UPDATE_MS)){
     if(display_switch_on){
