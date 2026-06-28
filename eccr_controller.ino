@@ -383,10 +383,10 @@ static uint16_t diff_u16(uint16_t a, uint16_t b){
 }
 
 system_state_t convert_raw_to_ppo2(const uint16_t raw, const uint8_t channel, uint16_t * const raw_converted_to_ppo2){
-  uint16_t reference_value = 0;
-  uint32_t ppo2 = 0;
+  uint16_t reference_value = 0U;
+  uint32_t ppo2 = 0U;
   const uint32_t scale = CALIBRATION_PPO2x1000;
-  uint32_t temp = 0;
+  uint32_t temp = 0U;
 
   if(system_get_calibration_factor(&reference_value, channel) != STATE_OK){
     return STATE_FUNCTION_FAILED;
@@ -405,9 +405,9 @@ system_state_t convert_raw_to_ppo2(const uint16_t raw, const uint8_t channel, ui
 }
 
 system_state_t cell_read(void){
-  uint16_t reading_raw = 0;
+  uint16_t reading_raw = 0U;
 
-  for(uint8_t channel = 0; channel < THREE_CELLS; channel++){
+  for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
     if(adc_raw_reading(&reading_raw, channel) != ADC_STATUS_OK){
       return STATE_FAILED_READ;
     }
@@ -548,7 +548,7 @@ void handle_error(void){
 
 void debug_print_stored_cell_values(void){
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
-    uint16_t reading_raw = 0;
+    uint16_t reading_raw = 0U;
     if(system_get_cell_reading(&reading_raw, channel) != STATE_OK){
       Serial.println("*");
     }
@@ -589,7 +589,7 @@ void debug_flash_led(){
 
 
 void debug_display_cal_factors(void){
-  uint16_t read = 0;
+  uint16_t read = 0U;
 
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
     system_get_calibration_factor(&read, channel);
