@@ -342,7 +342,6 @@ sensor_vote_result_t get_voted_sensor(uint16_t cells_raw[], uint16_t *voted_ppo2
   uint16_t d01;
   uint16_t d02;
   uint16_t d12;
-  uint16_t reading_raw = 0U;
 
   for (uint8_t channel = 0U; channel < THREE_CELLS; channel++){    
     if(convert_raw_to_ppo2(cells_raw[channel], channel, &readings[channel]) != STATE_OK){
