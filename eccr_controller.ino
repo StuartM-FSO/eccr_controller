@@ -40,6 +40,8 @@ constexpr uint32_t FREQUENCY_REQUIRES_CAL_LED_OFF_MS = 250U;
 constexpr uint32_t MAX_CALIBRATION_HOLD_MS = 5000U;
 constexpr uint16_t CALIBRATION_PPO2x1000 = 970U; // See Note 1
 constexpr uint16_t MAX_DEVIATION_FROM_SETPOINT = 100U;
+constexpr uint16_t CALIBRATION_ACCEPTABLE_LIMIT_MINIMUM_RAW = 100U; // Limit to be established through testing
+constexpr uint16_t CALIBRATION_ACCEPTABLE_LIMIT_MAXIMUM_RAW = 10000U; // Limit to be established through testing
 
 void setup() {
   init_state_t initialisation_state = INIT_BEGIN;
@@ -120,7 +122,20 @@ void loop() {
 
 //  0 - Work in progress
 
+bool is_initial_calibration_required(void){
+  uint16_t calibration_factor = 0U;
 
+  for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
+    if(system_get_calibration_factor(&calibration_factor, channel) != STATE_OK){
+      Serial.println("Read error in is_calibration_required");
+      handle_error();
+    }
+    if(calibration_factor == 0U){
+      return true;
+    }
+  }
+  return false;
+}
 
 
 
@@ -161,6 +176,12 @@ void fsm_waiting(const uint32_t now){
   bool divemode_led_on = false;
   bool display_switch_on = gpio_slide_switch_on();
   bool calibration_button_down = gpio_momentary_pushed();
+  bool initial_calibration_required = is_initial_calibration_required();
+
+  if(initial_calibration_required){
+    // To be done later when
+    // solenoid management added
+  }
 
   if(display_switch_on && calibration_button_down){
     system_set_calibration_hold_timer(now);
