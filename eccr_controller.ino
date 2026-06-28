@@ -275,7 +275,7 @@ void fsm_calibration_activated(const uint32_t now){
 
 void fsm_calibration_writing(const uint32_t now){
   uint32_t last_ms = 0U;
-  uint16_t raw_reading[THREE_CELLS] = {0U};
+  uint16_t reading_raw[THREE_CELLS] = {0U};
 
   if(system_get_calibration_write_timer(&last_ms) != STATE_OK){
     Serial.println("Failed at cal write");
@@ -283,10 +283,10 @@ void fsm_calibration_writing(const uint32_t now){
   }
   if(has_timer_elapsed(now, last_ms, (ONE_SECOND_MS * 3)) && !gpio_momentary_pushed()){
     for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
-      system_get_cell_reading(&raw_reading[channel], channel);
-      system_set_calibration_factor(raw_reading[channel], channel);
+      system_get_cell_reading(&reading_raw[channel], channel);
+      system_set_calibration_factor(reading_raw[channel], channel);
     }
-    if(eeprom_write_calibration(raw_reading) != MEM_OK){
+    if(eeprom_write_calibration(reading_raw) != MEM_OK){
       Serial.println("Cal write failed");
       handle_error();
     }
@@ -342,7 +342,7 @@ sensor_vote_result_t get_voted_sensor(uint16_t cells_raw[], uint16_t *voted_ppo2
   uint16_t d01;
   uint16_t d02;
   uint16_t d12;
-  uint16_t raw_reading = 0U;
+  uint16_t reading_raw = 0U;
 
   for (uint8_t channel = 0U; channel < THREE_CELLS; channel++){    
     if(convert_raw_to_ppo2(cells_raw[channel], channel, &readings[channel]) != STATE_OK){
@@ -409,13 +409,13 @@ system_state_t convert_raw_to_ppo2(const uint16_t raw, const uint8_t channel, ui
 }
 
 system_state_t cell_read(void){
-  uint16_t raw_reading = 0;
+  uint16_t reading_raw = 0;
 
   for(uint8_t channel = 0; channel < THREE_CELLS; channel++){
-    if(adc_raw_reading(&raw_reading, channel) != ADC_STATUS_OK){
+    if(adc_raw_reading(&reading_raw, channel) != ADC_STATUS_OK){
       return STATE_FAILED_READ;
     }
-    if(system_set_cell_reading(raw_reading, channel) != STATE_OK){
+    if(system_set_cell_reading(reading_raw, channel) != STATE_OK){
       return STATE_FUNCTION_FAILED;
     }
   }
@@ -423,16 +423,16 @@ system_state_t cell_read(void){
 }
 
 system_state_t assign_mv(int16_t cell_reading_mv[]){
-  uint16_t raw_reading = 0;
+  uint16_t reading_raw = 0;
 
   if(cell_reading_mv == NULL){
     return STATE_INVALID_PARAMETER;
   }
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
-    if(system_get_cell_reading(&raw_reading, channel) != STATE_OK){
+    if(system_get_cell_reading(&reading_raw, channel) != STATE_OK){
       return STATE_FUNCTION_FAILED;
     }
-    cell_reading_mv[channel] = adc_convert_raw_to_mV(raw_reading);
+    cell_reading_mv[channel] = adc_convert_raw_to_mV(reading_raw);
   }
   return STATE_OK;
 }
@@ -567,13 +567,13 @@ void handle_error(void){
 
 void debug_print_stored_cell_values(void){
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
-    uint16_t raw_reading = 0;
-    if(system_get_cell_reading(&raw_reading, channel) != STATE_OK){
+    uint16_t reading_raw = 0;
+    if(system_get_cell_reading(&reading_raw, channel) != STATE_OK){
       Serial.println("*");
     }
     Serial.print(channel);
     Serial.print(": ");
-    Serial.print(adc_convert_raw_to_mV(raw_reading));
+    Serial.print(adc_convert_raw_to_mV(reading_raw));
     Serial.println();
   }
 }
