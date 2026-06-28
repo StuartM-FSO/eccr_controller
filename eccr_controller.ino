@@ -220,6 +220,14 @@ void fsm_waiting(const uint32_t now){
   if(has_timer_elapsed(now, last_cell_read_time_ms, FREQUENCY_CELL_READ_MS)){
     system_set_fsm_state(FSM_READ_CELLS);
   }
+
+  if(has_timer_elapsed(now, divemode_led_timer_ms, divemode_flash_interval_ms)){
+    divemode_led_on = !divemode_led_on;
+    gpio_led_on(divemode_led_on);
+    system_set_divemode_led_on(divemode_led_on);
+    system_set_divemode_led_timer(now);
+  }
+
   if(has_timer_elapsed(now, last_lcd_update_time_ms, FREQUENCY_LCD_UPDATE_MS)){
     if(display_switch_on){
       if(display_handler_screen_on(cells_raw) != DISPLAY_STATUS_OK){
@@ -232,12 +240,7 @@ void fsm_waiting(const uint32_t now){
     }
     system_set_lcd_update_timer(now);
   }
-  if(has_timer_elapsed(now, divemode_led_timer_ms, divemode_flash_interval_ms)){
-    divemode_led_on = !divemode_led_on;
-    gpio_led_on(divemode_led_on);
-    system_set_divemode_led_on(divemode_led_on);
-    system_set_divemode_led_timer(now);
-  }
+  
 }
 
 void fsm_calibration_activated(const uint32_t now){
