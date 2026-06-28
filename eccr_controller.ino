@@ -73,8 +73,6 @@ void setup() {
     system_set_fsm_state(FSM_FAILED_SAFE);
     Serial.println("EEPROM read failed");
   }
-
-  debug_display_cal_factors();
 }
 
 void loop() {
