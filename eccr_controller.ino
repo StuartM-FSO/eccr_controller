@@ -226,7 +226,11 @@ void fsm_waiting(const uint32_t now){
       system_set_lcd_update_timer(now);
     }
   } else {
-    divemode_flash_interval_ms = (divemode_led_on) ? FREQUENCY_DIVEMODE_LED_ON_MS : FREQUENCY_DIVEMODE_LED_OFF_MS;
+    if(initial_calibration_required){
+      divemode_flash_interval_ms = (divemode_led_on) ? FREQUENCY_REQUIRES_CAL_LED_ON_MS : FREQUENCY_REQUIRES_CAL_LED_OFF_MS;
+    } else {
+      divemode_flash_interval_ms = (divemode_led_on) ? FREQUENCY_DIVEMODE_LED_ON_MS : FREQUENCY_DIVEMODE_LED_OFF_MS;
+    }
     if(display_handler_screen_off() != DISPLAY_STATUS_OK){
       Serial.println("display_handler_off failed in fsm_waiting");
       handle_error();
