@@ -120,85 +120,9 @@ void loop() {
 
 //  0 - Work in progress
 
-system_state_t convert_raw_to_ppO2(const uint16_t raw, const uint8_t channel, uint16_t * const raw_converted_to_ppO2){
-  uint16_t reference_value = 0;
-  uint32_t ppO2 = 0;
-  const uint32_t scale = CALIBRATION_PPO2x1000;
-  uint32_t temp = 0;
 
-  if(system_get_calibration_factor(&reference_value, channel) != STATE_OK){
-    return STATE_FUNCTION_FAILED;
-  }
-  if(raw_converted_to_ppO2 == NULL){
-    return STATE_INVALID_PARAMETER;
-  }
-  if(reference_value == 0){
-    return STATE_REQUIRES_CALIBRATION;
-  }
-  temp = ((uint32_t)raw) * scale;
-  ppO2 = temp / reference_value;
-  if (ppO2 > UINT16_MAX) return STATE_INVALID_PARAMETER;
-  *raw_converted_to_ppO2 = (uint16_t)ppO2;
-  return STATE_OK;
-}
 
-sensor_vote_result_t get_voted_sensor(uint16_t *voted_ppo2){
-  uint16_t readings[THREE_CELLS] = {0U};
-  const uint8_t SENSOR_0 = 0U;
-  const uint8_t SENSOR_1 = 1U;
-  const uint8_t SENSOR_2 = 2U;
-  const uint8_t AVERAGE_OF_3_SENSORS = 3U;
-  const uint8_t AVERAGE_OF_2_SENSORS = 2U;
-  uint16_t d01;
-  uint16_t d02;
-  uint16_t d12;
 
-  for (uint8_t channel = 0U; channel < THREE_CELLS; channel++){
-    uint16_t raw_reading = 0;
-    
-    if(system_get_cell_reading(&raw_reading, channel) != STATE_OK){
-      return SENSOR_FAULT;
-    }
-    if(convert_raw_to_ppO2(raw_reading, channel, &readings[channel]) != STATE_OK){
-      return SENSOR_FAULT;
-    }
-  }
-  d01 = diff_u16(readings[SENSOR_0], readings[SENSOR_1]);
-  d02 = diff_u16(readings[SENSOR_0], readings[SENSOR_2]);
-  d12 = diff_u16(readings[SENSOR_1], readings[SENSOR_2]);
-  if ((d01 <= MAX_DEVIATION_FROM_SETPOINT) && (d02 <= MAX_DEVIATION_FROM_SETPOINT) && (d12 <= MAX_DEVIATION_FROM_SETPOINT)){
-    *voted_ppo2 = (uint16_t)((readings[SENSOR_0] + readings[SENSOR_1] + readings[SENSOR_2]) / AVERAGE_OF_3_SENSORS);
-    return SENSOR_ALL_VALID;
-  }
-
-  uint8_t pair_a;
-  uint8_t pair_b;
-  sensor_vote_result_t rejected;
-  uint16_t min_deviation;
-
-  pair_a = SENSOR_0;
-  pair_b = SENSOR_1;
-  rejected = SENSOR_2_REJECTED;
-  min_deviation = d01;
-  if(d02 < min_deviation){
-    pair_a = SENSOR_0;
-    pair_b = SENSOR_2;
-    rejected = SENSOR_1_REJECTED;
-    min_deviation = d02;
-  }
-  if(d12 < min_deviation){
-    pair_a = SENSOR_1;
-    pair_b = SENSOR_2;
-    rejected = SENSOR_0_REJECTED;
-    min_deviation = d12;
-  }
-  *voted_ppo2 = (uint16_t)((readings[pair_a] + readings[pair_b]) / AVERAGE_OF_2_SENSORS);
-  return rejected;
-}
-
-static uint16_t diff_u16(uint16_t a, uint16_t b){
-  return (a > b) ? (a - b) : (b - a);
-}
 
 //  1 - FSM Handlers
 
@@ -229,6 +153,8 @@ void fsm_waiting(const uint32_t now){
   uint32_t last_lcd_update_time_ms = 0U;
   uint32_t divemode_led_timer_ms = 0U;
   uint32_t divemode_flash_interval_ms = 0U;
+  uint16_t cells_ppo2[THREE_CELLS] = {0U};
+  uint16_t calibration_raw[THREE_CELLS] = {0U};
   bool divemode_led_on = false;
   bool display_switch_on = gpio_slide_switch_on();
   bool calibration_button_down = gpio_momentary_pushed();
@@ -347,6 +273,86 @@ void fsm_calibration_writing(const uint32_t now){
 }
 
 //  2 - Cell handling
+
+sensor_vote_result_t get_voted_sensor(uint16_t *voted_ppo2){
+  uint16_t readings[THREE_CELLS] = {0U};
+  const uint8_t SENSOR_0 = 0U;
+  const uint8_t SENSOR_1 = 1U;
+  const uint8_t SENSOR_2 = 2U;
+  const uint8_t AVERAGE_OF_3_SENSORS = 3U;
+  const uint8_t AVERAGE_OF_2_SENSORS = 2U;
+  uint16_t d01;
+  uint16_t d02;
+  uint16_t d12;
+
+  for (uint8_t channel = 0U; channel < THREE_CELLS; channel++){
+    uint16_t raw_reading = 0;
+    
+    if(system_get_cell_reading(&raw_reading, channel) != STATE_OK){
+      return SENSOR_FAULT;
+    }
+    if(convert_raw_to_ppO2(raw_reading, channel, &readings[channel]) != STATE_OK){
+      return SENSOR_FAULT;
+    }
+  }
+  d01 = diff_u16(readings[SENSOR_0], readings[SENSOR_1]);
+  d02 = diff_u16(readings[SENSOR_0], readings[SENSOR_2]);
+  d12 = diff_u16(readings[SENSOR_1], readings[SENSOR_2]);
+  if ((d01 <= MAX_DEVIATION_FROM_SETPOINT) && (d02 <= MAX_DEVIATION_FROM_SETPOINT) && (d12 <= MAX_DEVIATION_FROM_SETPOINT)){
+    *voted_ppo2 = (uint16_t)((readings[SENSOR_0] + readings[SENSOR_1] + readings[SENSOR_2]) / AVERAGE_OF_3_SENSORS);
+    return SENSOR_ALL_VALID;
+  }
+
+  uint8_t pair_a;
+  uint8_t pair_b;
+  sensor_vote_result_t rejected;
+  uint16_t min_deviation;
+
+  pair_a = SENSOR_0;
+  pair_b = SENSOR_1;
+  rejected = SENSOR_2_REJECTED;
+  min_deviation = d01;
+  if(d02 < min_deviation){
+    pair_a = SENSOR_0;
+    pair_b = SENSOR_2;
+    rejected = SENSOR_1_REJECTED;
+    min_deviation = d02;
+  }
+  if(d12 < min_deviation){
+    pair_a = SENSOR_1;
+    pair_b = SENSOR_2;
+    rejected = SENSOR_0_REJECTED;
+    min_deviation = d12;
+  }
+  *voted_ppo2 = (uint16_t)((readings[pair_a] + readings[pair_b]) / AVERAGE_OF_2_SENSORS);
+  return rejected;
+}
+
+static uint16_t diff_u16(uint16_t a, uint16_t b){
+  return (a > b) ? (a - b) : (b - a);
+}
+
+system_state_t convert_raw_to_ppO2(const uint16_t raw, const uint8_t channel, uint16_t * const raw_converted_to_ppO2){
+  uint16_t reference_value = 0;
+  uint32_t ppO2 = 0;
+  const uint32_t scale = CALIBRATION_PPO2x1000;
+  uint32_t temp = 0;
+
+  if(system_get_calibration_factor(&reference_value, channel) != STATE_OK){
+    return STATE_FUNCTION_FAILED;
+  }
+  if(raw_converted_to_ppO2 == NULL){
+    return STATE_INVALID_PARAMETER;
+  }
+  if(reference_value == 0){
+    return STATE_REQUIRES_CALIBRATION;
+  }
+  temp = ((uint32_t)raw) * scale;
+  ppO2 = temp / reference_value;
+  if (ppO2 > UINT16_MAX) return STATE_INVALID_PARAMETER;
+  *raw_converted_to_ppO2 = (uint16_t)ppO2;
+  return STATE_OK;
+}
 
 system_state_t cell_read(void){
   uint16_t raw_reading = 0;
