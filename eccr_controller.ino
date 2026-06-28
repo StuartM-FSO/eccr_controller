@@ -148,29 +148,7 @@ void fsm_read_cells(const uint32_t now){
   //debug_test_ppo2_conversion();
 }
 
-system_state_t helper_assign_current_cell_raw_to_array(uint16_t cells_raw[]){
-  bool cell_read_ready = false;
-  
-  if(cells_raw == NULL){
-    return STATE_INVALID_PARAMETER;
-  }
-  if(system_get_cell_read_ready(&cell_read_ready) != STATE_OK){
-    Serial.println("Get cell read ready in helper_assign_current_cell_read_to_array");
-    handle_error();
-  }
-  if(cell_read_ready){
-    for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
-      if(system_get_cell_reading(&cells_raw[channel], channel) != STATE_OK){
-        Serial.println("Error getting cell readings in helper_assign_current_cell_read_to_array");
-        handle_error();
-      }
-    }
-  } else {
-    Serial.println("Cells unavailable in helper_assign_current_cell_read_to_array");
-    handle_error();
-  }
-  return STATE_OK;
-}
+
 
 
 
@@ -304,6 +282,30 @@ void fsm_calibration_writing(const uint32_t now){
 }
 
 //  2 - Cell handling
+
+system_state_t helper_assign_current_cell_raw_to_array(uint16_t cells_raw[]){
+  bool cell_read_ready = false;
+  
+  if(cells_raw == NULL){
+    return STATE_INVALID_PARAMETER;
+  }
+  if(system_get_cell_read_ready(&cell_read_ready) != STATE_OK){
+    Serial.println("Get cell read ready in helper_assign_current_cell_read_to_array");
+    handle_error();
+  }
+  if(cell_read_ready){
+    for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
+      if(system_get_cell_reading(&cells_raw[channel], channel) != STATE_OK){
+        Serial.println("Error getting cell readings in helper_assign_current_cell_read_to_array");
+        handle_error();
+      }
+    }
+  } else {
+    Serial.println("Cells unavailable in helper_assign_current_cell_read_to_array");
+    handle_error();
+  }
+  return STATE_OK;
+}
 
 sensor_vote_result_t get_voted_sensor(uint16_t *voted_ppo2){
   uint16_t readings[THREE_CELLS] = {0U};
