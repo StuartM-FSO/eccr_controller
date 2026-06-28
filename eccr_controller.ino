@@ -403,7 +403,6 @@ system_state_t print_ppo2_top_line_oled(uint16_t cells_ppo2[], sensor_vote_resul
   if(voted_cell >= SENSOR_COUNT_END){
     return STATE_INVALID_PARAMETER;
   }
-
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
     if(voted_cell == channel){
       display_set_colour(DISPLAY_BLACK, DISPLAY_WHITE);
@@ -413,9 +412,6 @@ system_state_t print_ppo2_top_line_oled(uint16_t cells_ppo2[], sensor_vote_resul
     display_set_colour(DISPLAY_WHITE, DISPLAY_BLACK);
     display_print(" ");
   }
-
-
-
   return STATE_OK;
 }
 
@@ -447,7 +443,10 @@ display_status_t mode_screen_on(void){
   display_clear();
   display_set_cursor(0, 0);
   display_font_size(1);
-  print_ppo2_top_line_oled(cells_ppo2, voted_cell);
+  if(print_ppo2_top_line_oled(cells_ppo2, voted_cell) != STATE_OK){
+    Serial.println("print_ppo2 in mode_screen_on");
+    handle_error();
+  }
   display_println("");
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
     if(voted_cell == channel){
