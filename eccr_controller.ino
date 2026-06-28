@@ -507,7 +507,7 @@ display_status_t display_handler_screen_on(uint16_t cells_raw[]){
         handle_error();
         break;
     }
-    cells_mv[channel] = (uint16_t)adc_convert_raw_to_mV(raw_reading);
+    cells_mv[channel] = (uint16_t)adc_convert_raw_to_mV(cells_raw[channel]);
   }
   display_clear();
   display_set_cursor(0, 0);
