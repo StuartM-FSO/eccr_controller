@@ -35,6 +35,8 @@ constexpr uint32_t FREQUENCY_DIVEMODE_LED_ON_MS = 200U;
 constexpr uint32_t FREQUENCY_DIVEMODE_LED_OFF_MS = 3000U;
 constexpr uint32_t FREQUENCY_DATAMODE_LED_ON_MS = 100U;
 constexpr uint32_t FREQUENCY_DATAMODE_LED_OFF_MS = 400U;
+constexpr uint32_t FREQUENCY_REQUIRES_CAL_LED_ON_MS = 1000U;
+constexpr uint32_t FREQUENCY_REQUIRES_CAL_LED_OFF_MS = 250U;
 constexpr uint32_t MAX_CALIBRATION_HOLD_MS = 5000U;
 constexpr uint16_t CALIBRATION_PPO2x1000 = 970U; // See Note 1
 constexpr uint16_t MAX_DEVIATION_FROM_SETPOINT = 100U;
@@ -447,35 +449,51 @@ display_status_t mode_screen_on(void){
   uint16_t cells_mv[THREE_CELLS] = {0U};
   sensor_vote_result_t voted_cell;
   uint16_t voted_ppo2;
+  system_state_t conversion_status = STATE_UNINITIALISED;
+  bool requires_calibration = false;
 
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
     if(system_get_cell_reading(&raw_reading, channel) != STATE_OK){
       Serial.print("Failed mode_screen_on 1");
       handle_error();
     }
-    if(convert_raw_to_ppO2(raw_reading, channel, &cells_ppo2[channel]) != STATE_OK){
-      Serial.print("Failed mode_screen_on 2");
-      handle_error();
+    conversion_status = convert_raw_to_ppO2(raw_reading, channel, &cells_ppo2[channel]);
+    switch (conversion_status) {
+      case STATE_OK:
+        requires_calibration = false;
+        break;
+      case STATE_REQUIRES_CALIBRATION:
+        requires_calibration = true;
+        break;
+      default:
+        Serial.println("Conversion failed mode_screen_on");
+        handle_error();
+        break;
     }
     cells_mv[channel] = (uint16_t)adc_convert_raw_to_mV(raw_reading);
-  }
-  voted_cell = get_voted_sensor(&voted_ppo2);
-  if(voted_cell == SENSOR_FAULT){
-    Serial.println("voted cell fault");
-    handle_error();
   }
   display_clear();
   display_set_cursor(0, 0);
   display_font_size(1);
-  if(print_ppo2_top_line_oled(cells_ppo2, voted_cell) != STATE_OK){
-    Serial.println("print_ppo2 in mode_screen_on");
-    handle_error();
+  if(requires_calibration){
+    display_println("Requires calibration");
+  } else {
+    voted_cell = get_voted_sensor(&voted_ppo2);
+    if(voted_cell == SENSOR_FAULT){
+      Serial.println("voted cell fault");
+      handle_error();
+    }
+    if(print_ppo2_top_line_oled(cells_ppo2, voted_cell) != STATE_OK){
+      Serial.println("print_ppo2 in mode_screen_on");
+      handle_error();
+    }
+    display_println("");
+    if(print_mv_bottom_line_oled(cells_mv, voted_cell) != STATE_OK){
+      Serial.println("print_mv in mode_screen_on");
+      handle_error();
+    }
   }
-  display_println("");
-  if(print_mv_bottom_line_oled(cells_mv, voted_cell) != STATE_OK){
-    Serial.println("print_mv in mode_screen_on");
-    handle_error();
-  }
+  
   if(display_update() != DISPLAY_STATUS_OK){
     return DISPLAY_STATUS_HW_ERROR;
   }
