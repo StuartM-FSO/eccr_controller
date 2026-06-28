@@ -329,6 +329,10 @@ system_state_t helper_assign_current_cell_raw_to_array(uint16_t cells_raw[]){
 }
 
 sensor_vote_result_t get_voted_sensor(uint16_t *voted_ppo2){
+  if(voted_ppo2 == NULL){
+    return SENSOR_FAULT;
+  }
+
   uint16_t readings[THREE_CELLS] = {0U};
   const uint8_t SENSOR_0 = 0U;
   const uint8_t SENSOR_1 = 1U;
