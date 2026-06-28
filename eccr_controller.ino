@@ -158,8 +158,6 @@ void fsm_read_cells(const uint32_t now){
     return;
   }
   system_set_fsm_state(FSM_WAITING);
-
-  //debug_test_ppo2_conversion();
 }
 
 
