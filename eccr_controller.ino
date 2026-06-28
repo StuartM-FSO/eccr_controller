@@ -444,8 +444,6 @@ display_status_t mode_screen_on(void){
   uint16_t cells_mv[THREE_CELLS] = {0U};
   sensor_vote_result_t voted_cell;
   uint16_t voted_ppo2;
-  //char buffer_ppo2[FORMATTING_PPO2_STR_LEN];
-  //char buffer_mv[FORMATTING_INTEGER_STR_LEN];
 
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
     if(system_get_cell_reading(&raw_reading, channel) != STATE_OK){
