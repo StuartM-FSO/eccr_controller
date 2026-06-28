@@ -127,8 +127,11 @@ system_state_t convert_raw_to_ppO2(const uint16_t raw, const uint8_t channel, ui
   if(system_get_calibration_factor(&reference_value, channel) != STATE_OK){
     return STATE_FUNCTION_FAILED;
   }
-  if((raw_converted_to_ppO2 == NULL) || (reference_value == 0)){
+  if(raw_converted_to_ppO2 == NULL){
     return STATE_INVALID_PARAMETER;
+  }
+  if(reference_value == 0){
+    return STATE_REQUIRES_CALIBRATION;
   }
   temp = ((uint32_t)raw) * scale;
   ppO2 = temp / reference_value;
