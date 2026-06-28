@@ -214,6 +214,7 @@ void fsm_waiting(const uint32_t now){
 
   if(has_timer_elapsed(now, last_cell_read_time_ms, FREQUENCY_CELL_READ_MS)){
     system_set_fsm_state(FSM_READ_CELLS);
+    return;
   }
 
   if(display_switch_on){
