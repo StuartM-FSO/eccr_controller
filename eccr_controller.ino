@@ -299,7 +299,6 @@ void fsm_calibration_activated(const uint32_t now){
     return;
   }
   if(!screen_written_once){
-    Serial.println("Screen write");
     display_clear();
     display_set_cursor(0, 0);
     display_println("HOLD TO");
@@ -317,8 +316,8 @@ void fsm_calibration_writing(const uint32_t now){
   uint16_t raw_reading[THREE_CELLS] = {0U};
 
   if(system_get_calibration_write_timer(&last_ms) != STATE_OK){
-    handle_error();
     Serial.println("Failed at cal write");
+    handle_error();
   }
   if(has_timer_elapsed(now, last_ms, 3000U) && !gpio_momentary_pushed()){
     for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
@@ -392,6 +391,11 @@ system_state_t assign_cell_calibration_factors(void){
 display_status_t mode_screen_off(void){
   display_clear();
   return display_update();
+}
+
+system_state_t print_ppo2_top_line_oled(uint16_t cells_ppo2[], uint8_t voted_cell){
+  
+  return STATE_OK;
 }
 
 display_status_t mode_screen_on(void){
