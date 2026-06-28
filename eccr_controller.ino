@@ -64,7 +64,7 @@ void setup() {
   if(initialisation_state != INIT_SUCCESS){
     system_set_fsm_state(FSM_UNINITIALISED);
   } else {
-    system_set_fsm_state(FSM_WAITING);
+    system_set_fsm_state(FSM_READ_CELLS);
     Serial.println("Success");
   }
 
@@ -148,12 +148,36 @@ void fsm_read_cells(const uint32_t now){
   //debug_test_ppo2_conversion();
 }
 
+system_state_t helper_assign_current_cell_read_to_array(uint16_t cells_raw[]){
+  bool cell_read_ready = false;
+  
+  if(cells_raw == NULL){
+    return STATE_INVALID_PARAMETER;
+  }
+  if(system_get_cell_read_ready(&cell_read_ready) != STATE_OK){
+    Serial.println("Get cell read ready in helper_assign_current_cell_read_to_array");
+    handle_error();
+  }
+  if(cell_read_ready){
+    for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
+      if(system_get_cell_reading(&cells_raw[channel], channel) != STATE_OK){
+        Serial.println("Error getting cell readings in helper_assign_current_cell_read_to_array");
+        handle_error();
+      }
+    }
+  } else {
+    Serial.println("Cells unavailable in helper_assign_current_cell_read_to_array");
+    handle_error();
+  }
+  return STATE_OK;
+}
+
 void fsm_waiting(const uint32_t now){
   uint32_t last_cell_read_time_ms = 0U;
   uint32_t last_lcd_update_time_ms = 0U;
   uint32_t divemode_led_timer_ms = 0U;
   uint32_t divemode_flash_interval_ms = 0U;
-  uint16_t cells_ppo2[THREE_CELLS] = {0U};
+  uint16_t cells_raw[THREE_CELLS] = {0U};
   uint16_t calibration_raw[THREE_CELLS] = {0U};
   bool divemode_led_on = false;
   bool display_switch_on = gpio_slide_switch_on();
@@ -164,6 +188,13 @@ void fsm_waiting(const uint32_t now){
     system_set_fsm_state(FSM_CALIBRATION_ACTIVATED);
     return;
   }
+
+  if(helper_assign_current_cell_read_to_array(cells_raw) != STATE_OK){
+    Serial.println("cell assignment error in fsm_waiting");
+    handle_error();
+  }
+
+
 
   if(system_get_cell_read_timer(&last_cell_read_time_ms) != STATE_OK){
     handle_error();
@@ -194,11 +225,11 @@ void fsm_waiting(const uint32_t now){
   }
   if(has_timer_elapsed(now, last_lcd_update_time_ms, FREQUENCY_LCD_UPDATE_MS)){
     if(display_switch_on){
-      if(mode_screen_on() != DISPLAY_STATUS_OK){
+      if(display_handler_screen_on(cells_raw) != DISPLAY_STATUS_OK){
         // Handle failure
       }
     } else {
-      if(mode_screen_off() != DISPLAY_STATUS_OK){
+      if(display_handler_screen_off() != DISPLAY_STATUS_OK){
         // Handle failure
       }
     }
@@ -400,7 +431,7 @@ system_state_t assign_cell_calibration_factors(void){
 
 
 //  3 - Display
-display_status_t mode_screen_off(void){
+display_status_t display_handler_screen_off(void){
   display_clear();
   return display_update();
 }
@@ -449,7 +480,7 @@ system_state_t print_mv_bottom_line_oled(uint16_t cells_mv[], sensor_vote_result
   return STATE_OK;
 }
 
-display_status_t mode_screen_on(void){
+display_status_t display_handler_screen_on(uint16_t cells_raw[]){
   uint16_t raw_reading = 0U;
   uint16_t cells_ppo2[THREE_CELLS] = {0U};
   uint16_t cells_mv[THREE_CELLS] = {0U};
@@ -458,12 +489,12 @@ display_status_t mode_screen_on(void){
   system_state_t conversion_status = STATE_UNINITIALISED;
   bool requires_calibration = false;
 
+  if(cells_raw == NULL){
+    return DISPLAY_STATUS_INVALID_PARAM;
+  }
+
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
-    if(system_get_cell_reading(&raw_reading, channel) != STATE_OK){
-      Serial.print("Failed mode_screen_on 1");
-      handle_error();
-    }
-    conversion_status = convert_raw_to_ppO2(raw_reading, channel, &cells_ppo2[channel]);
+    conversion_status = convert_raw_to_ppO2(cells_raw[channel], channel, &cells_ppo2[channel]);
     switch (conversion_status) {
       case STATE_OK:
         requires_calibration = false;
