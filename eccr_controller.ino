@@ -345,7 +345,7 @@ sensor_vote_result_t get_voted_sensor(uint16_t cells_raw[], uint16_t *voted_ppo2
   uint16_t raw_reading = 0U;
 
   for (uint8_t channel = 0U; channel < THREE_CELLS; channel++){    
-    if(convert_raw_to_ppO2(cells_raw[channel], channel, &readings[channel]) != STATE_OK){
+    if(convert_raw_to_ppo2(cells_raw[channel], channel, &readings[channel]) != STATE_OK){
       return SENSOR_FAULT;
     }
   }
@@ -386,25 +386,25 @@ static uint16_t diff_u16(uint16_t a, uint16_t b){
   return (a > b) ? (a - b) : (b - a);
 }
 
-system_state_t convert_raw_to_ppO2(const uint16_t raw, const uint8_t channel, uint16_t * const raw_converted_to_ppO2){
+system_state_t convert_raw_to_ppo2(const uint16_t raw, const uint8_t channel, uint16_t * const raw_converted_to_ppo2){
   uint16_t reference_value = 0;
-  uint32_t ppO2 = 0;
+  uint32_t ppo2 = 0;
   const uint32_t scale = CALIBRATION_PPO2x1000;
   uint32_t temp = 0;
 
   if(system_get_calibration_factor(&reference_value, channel) != STATE_OK){
     return STATE_FUNCTION_FAILED;
   }
-  if(raw_converted_to_ppO2 == NULL){
+  if(raw_converted_to_ppo2 == NULL){
     return STATE_INVALID_PARAMETER;
   }
   if(reference_value == 0){
     return STATE_REQUIRES_CALIBRATION;
   }
   temp = ((uint32_t)raw) * scale;
-  ppO2 = temp / reference_value;
-  if (ppO2 > UINT16_MAX) return STATE_OVERFLOW;
-  *raw_converted_to_ppO2 = (uint16_t)ppO2;
+  ppo2 = temp / reference_value;
+  if (ppo2 > UINT16_MAX) return STATE_OVERFLOW;
+  *raw_converted_to_ppo2 = (uint16_t)ppo2;
   return STATE_OK;
 }
 
@@ -521,7 +521,7 @@ display_status_t display_handler_screen_on(uint16_t cells_raw[], bool calibratio
     display_println("CALIBRATION REQUIRED");
   } else {
     for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
-      if(convert_raw_to_ppO2(cells_raw[channel], channel, &cells_ppo2[channel]) != STATE_OK){
+      if(convert_raw_to_ppo2(cells_raw[channel], channel, &cells_ppo2[channel]) != STATE_OK){
         Serial.println("Conversion failed in display_handler_screen_on");
         handle_error();
       }
