@@ -26,6 +26,7 @@ typedef enum {
   SENSOR_2_REJECTED = 2U,
   SENSOR_ALL_VALID  = 3U,
   SENSOR_FAULT      = 4U,
+  SENSOR_UNINITIALISED = 5U,
   SENSOR_COUNT_END // Do not add types beyond this
 } sensor_vote_result_t;
 
@@ -166,13 +167,14 @@ bool helper_load_waiting_state(uint32_t *cell_timer, uint32_t *lcd_timer, uint32
     (system_get_divemode_led_on(led_on) == STATE_OK));
 }
 
-
 void fsm_waiting(const uint32_t now){
   uint32_t last_cell_read_time_ms = 0U;
   uint32_t last_lcd_update_time_ms = 0U;
   uint32_t divemode_led_timer_ms = 0U;
   uint32_t divemode_flash_interval_ms = 0U;
   uint16_t cells_raw[THREE_CELLS] = {0U};
+  sensor_vote_result_t voted_cell = SENSOR_UNINITIALISED;
+  uint16_t voted_ppo2 = 0U;
   bool divemode_led_on = false;
   bool display_switch_on = gpio_slide_switch_on();
   bool calibration_button_down = gpio_momentary_pushed();
@@ -194,6 +196,8 @@ void fsm_waiting(const uint32_t now){
     handle_error();
   }
 
+  voted_cell = get_voted_sensor(cells_raw, &voted_ppo2);
+
   if (!helper_load_waiting_state(&last_cell_read_time_ms, &last_lcd_update_time_ms, &divemode_led_timer_ms, &divemode_led_on)){
     Serial.println("Error loading timer data in fsm_waiting");
     handle_error();
@@ -210,7 +214,7 @@ void fsm_waiting(const uint32_t now){
   if(display_switch_on){
     divemode_flash_interval_ms = (divemode_led_on) ? FREQUENCY_DATAMODE_LED_ON_MS : FREQUENCY_DATAMODE_LED_OFF_MS;
     if(has_timer_elapsed(now, last_lcd_update_time_ms, FREQUENCY_LCD_UPDATE_MS)){
-      if(display_handler_screen_on(cells_raw, initial_calibration_required) != DISPLAY_STATUS_OK){
+      if(display_handler_screen_on(cells_raw, initial_calibration_required, voted_cell) != DISPLAY_STATUS_OK){
         Serial.println("display_handler_on failed in fsm_waiting");
         handle_error();
       }
@@ -482,11 +486,11 @@ system_state_t print_mv_bottom_line_oled(uint16_t cells_mv[], sensor_vote_result
   return STATE_OK;
 }
 
-display_status_t display_handler_screen_on(uint16_t cells_raw[], bool calibration_required){
+display_status_t display_handler_screen_on(uint16_t cells_raw[], bool calibration_required, sensor_vote_result_t voted_cell){
   uint16_t cells_ppo2[THREE_CELLS] = {0U};
   uint16_t cells_mv[THREE_CELLS] = {0U};
-  sensor_vote_result_t voted_cell;
-  uint16_t voted_ppo2;
+  //sensor_vote_result_t voted_cell;
+  //uint16_t voted_ppo2;
 
   if(cells_raw == NULL){
     return DISPLAY_STATUS_INVALID_PARAM;
@@ -506,7 +510,7 @@ display_status_t display_handler_screen_on(uint16_t cells_raw[], bool calibratio
       }
       cells_mv[channel] = (uint16_t)adc_convert_raw_to_mV(cells_raw[channel]);
     }
-    voted_cell = get_voted_sensor(cells_raw, &voted_ppo2);
+    //voted_cell = get_voted_sensor(cells_raw, &voted_ppo2);
     if(voted_cell == SENSOR_FAULT){
       Serial.println("voted cell fault");
       handle_error();
