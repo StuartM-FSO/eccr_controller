@@ -232,14 +232,13 @@ void fsm_waiting(const uint32_t now){
       }
       system_set_lcd_update_timer(now);
     }
-  } else {
-    if(display_handler_screen_off() != DISPLAY_STATUS_OK){
-      Serial.println("display_handler_off failed in fsm_waiting");
-      handle_error();
-    }
+    return;
   }
 
-  
+  if(display_handler_screen_off() != DISPLAY_STATUS_OK){
+    Serial.println("display_handler_off failed in fsm_waiting");
+    handle_error();
+  }
 }
 
 uint32_t get_divemode_flash_interval_ms(bool divemode_led_on, bool display_switch_on, bool initial_calibration_required){
