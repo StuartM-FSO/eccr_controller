@@ -216,6 +216,14 @@ void fsm_waiting(const uint32_t now){
     return;
   }
 
+  divemode_flash_interval_ms = get_divemode_flash_interval_ms(divemode_led_on, display_switch_on, initial_calibration_required);
+  if(has_timer_elapsed(now, divemode_led_timer_ms, divemode_flash_interval_ms)){
+    divemode_led_on = !divemode_led_on;
+    gpio_led_on(divemode_led_on);
+    system_set_divemode_led_on(divemode_led_on);
+    system_set_divemode_led_timer(now);
+  }
+
   if(display_switch_on){
     if(has_timer_elapsed(now, last_lcd_update_time_ms, FREQUENCY_LCD_UPDATE_MS)){
       if(display_handler_screen_on(cells_raw, initial_calibration_required, voted_cell) != DISPLAY_STATUS_OK){
@@ -231,14 +239,7 @@ void fsm_waiting(const uint32_t now){
     }
   }
 
-  divemode_flash_interval_ms = get_divemode_flash_interval_ms(divemode_led_on, display_switch_on, initial_calibration_required);
-
-  if(has_timer_elapsed(now, divemode_led_timer_ms, divemode_flash_interval_ms)){
-    divemode_led_on = !divemode_led_on;
-    gpio_led_on(divemode_led_on);
-    system_set_divemode_led_on(divemode_led_on);
-    system_set_divemode_led_timer(now);
-  }
+  
 }
 
 uint32_t get_divemode_flash_interval_ms(bool divemode_led_on, bool display_switch_on, bool initial_calibration_required){
