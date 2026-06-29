@@ -160,7 +160,7 @@ void fsm_read_cells(const uint32_t now){
 }
 
 
-bool helper_load_waiting_state(uint32_t *cell_timer, uint32_t *lcd_timer, uint32_t *led_timer, bool *led_on){
+bool helper_load_waiting_timer_state(uint32_t *cell_timer, uint32_t *lcd_timer, uint32_t *led_timer, bool *led_on){
   return ((system_get_cell_read_timer(cell_timer) == STATE_OK) &&
     (system_get_lcd_update_timer(lcd_timer) == STATE_OK) &&
     (system_get_divemode_led_timer(led_timer) == STATE_OK) &&
@@ -198,12 +198,10 @@ void fsm_waiting(const uint32_t now){
 
   voted_cell = get_voted_sensor(cells_raw, &voted_ppo2);
 
-  if (!helper_load_waiting_state(&last_cell_read_time_ms, &last_lcd_update_time_ms, &divemode_led_timer_ms, &divemode_led_on)){
+  if (!helper_load_waiting_timer_state(&last_cell_read_time_ms, &last_lcd_update_time_ms, &divemode_led_timer_ms, &divemode_led_on)){
     Serial.println("Error loading timer data in fsm_waiting");
     handle_error();
   }
-  
-
 
   if(has_timer_elapsed(now, last_cell_read_time_ms, FREQUENCY_CELL_READ_MS)){
     system_set_fsm_state(FSM_READ_CELLS);
@@ -238,7 +236,6 @@ void fsm_waiting(const uint32_t now){
     system_set_divemode_led_on(divemode_led_on);
     system_set_divemode_led_timer(now);
   }
-  
 }
 
 void fsm_calibration_activated(const uint32_t now){
