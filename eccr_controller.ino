@@ -107,6 +107,9 @@ void loop() {
     case FSM_CALIBRATION_WRITING:
       fsm_calibration_writing(now);
       break;
+    case FSM_DATA_DISPLAY:
+      fsm_data_display(now);
+      break;
     default:
       system_set_fsm_state(FSM_FAILED_SAFE);
       break;
@@ -140,6 +143,8 @@ bool is_initial_calibration_required(void){
 
 //  1 - FSM Handlers
 
+
+
 void fsm_read_cells(const uint32_t now){
   if(system_set_cell_read_ready(false) != STATE_OK){
     system_set_fsm_state(FSM_FAILED_SAFE);
@@ -161,9 +166,8 @@ void fsm_read_cells(const uint32_t now){
 }
 
 
-bool helper_load_waiting_timer_state(uint32_t *cell_timer, uint32_t *lcd_timer, uint32_t *led_timer, bool *led_on, uint32_t *main_loop_timer){
+bool helper_load_waiting_timer_state(uint32_t *cell_timer, uint32_t *led_timer, bool *led_on, uint32_t *main_loop_timer){
   return ((system_get_cell_read_timer(cell_timer) == STATE_OK) &&
-    (system_get_lcd_update_timer(lcd_timer) == STATE_OK) &&
     (system_get_divemode_led_timer(led_timer) == STATE_OK) &&
     (system_get_divemode_led_on(led_on) == STATE_OK)) &&
     (system_get_main_loop_timer(main_loop_timer) == STATE_OK);
@@ -171,7 +175,7 @@ bool helper_load_waiting_timer_state(uint32_t *cell_timer, uint32_t *lcd_timer, 
 
 void fsm_waiting(const uint32_t now){
   uint32_t last_cell_read_time_ms = 0U;
-  uint32_t last_lcd_update_time_ms = 0U;
+  //uint32_t last_lcd_update_time_ms = 0U;
   uint32_t divemode_led_timer_ms = 0U;
   uint32_t divemode_flash_interval_ms = 0U;
   uint32_t main_loop_timer_ms = 0U;
@@ -202,7 +206,6 @@ void fsm_waiting(const uint32_t now){
   voted_cell = get_voted_sensor(cells_raw, &voted_ppo2);
 
   if (!helper_load_waiting_timer_state(&last_cell_read_time_ms,
-                                        &last_lcd_update_time_ms,
                                         &divemode_led_timer_ms,
                                         &divemode_led_on,
                                         &main_loop_timer_ms)){
@@ -224,7 +227,7 @@ void fsm_waiting(const uint32_t now){
     system_set_divemode_led_timer(now);
   }
 
-  if(display_switch_on){
+  /* if(display_switch_on){
     if(has_timer_elapsed(now, last_lcd_update_time_ms, FREQUENCY_LCD_UPDATE_MS)){
       if(display_handler_screen_on(cells_raw, initial_calibration_required, voted_cell) != DISPLAY_STATUS_OK){
         Serial.println("display_handler_on failed in fsm_waiting");
@@ -232,6 +235,11 @@ void fsm_waiting(const uint32_t now){
       }
       system_set_lcd_update_timer(now);
     }
+    return;
+  } */
+
+  if(display_switch_on){
+    system_set_fsm_state(FSM_DATA_DISPLAY);
     return;
   }
 
@@ -243,6 +251,57 @@ void fsm_waiting(const uint32_t now){
   if(has_timer_elapsed(now, main_loop_timer_ms, FREQUENCY_MAIN_LOOP_MS)){
     Serial.println("Main loop run");
     system_set_main_loop_timer(now);
+  }
+}
+
+void fsm_data_display(uint32_t now){
+  uint32_t last_lcd_update_time_ms = 0U;
+  uint32_t last_cell_read_time_ms = 0U;
+  uint16_t cells_raw[THREE_CELLS] = {0U};
+  bool initial_calibration_required = is_initial_calibration_required();
+  sensor_vote_result_t voted_cell = SENSOR_UNINITIALISED;
+  uint16_t voted_ppo2 = 0U;
+
+  if(!gpio_slide_switch_on()){
+    system_set_fsm_state(FSM_WAITING);
+    return;
+  }
+
+  if(initial_calibration_required){
+    // To be done later when
+    // solenoid management added
+  }
+
+  if(system_get_cell_read_timer(&last_cell_read_time_ms) != STATE_OK){
+    Serial.println("Failed get cell timer fsm_data_display");
+    handle_error();
+  }
+
+  if(has_timer_elapsed(now, last_cell_read_time_ms, FREQUENCY_CELL_READ_MS)){
+    system_set_fsm_state(FSM_READ_CELLS);
+    system_set_cell_read_timer(now);
+    return;
+  }  
+
+  voted_cell = get_voted_sensor(cells_raw, &voted_ppo2);
+
+  if(helper_assign_current_cell_raw_to_array(cells_raw) != STATE_OK){
+    Serial.println("cell assignment error in fsm_waiting");
+    handle_error();
+  }
+
+  if(system_get_lcd_update_timer(&last_lcd_update_time_ms) != STATE_OK){
+    Serial.println("Error getting lcd timer in fsm_data_display");
+    handle_error();
+  }
+
+  if(has_timer_elapsed(now, last_lcd_update_time_ms, FREQUENCY_LCD_UPDATE_MS)){
+    if(display_handler_screen_on(cells_raw, initial_calibration_required, voted_cell) != DISPLAY_STATUS_OK){
+      Serial.println("display_handler_on failed in fsm_waiting");
+      handle_error();
+    }
+    system_set_lcd_update_timer(now);
+    Serial.println("fsm_data_display");
   }
 }
 
