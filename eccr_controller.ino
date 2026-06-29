@@ -38,6 +38,7 @@ constexpr uint32_t FREQUENCY_DATAMODE_LED_ON_MS = 100U;
 constexpr uint32_t FREQUENCY_DATAMODE_LED_OFF_MS = 400U;
 constexpr uint32_t FREQUENCY_REQUIRES_CAL_LED_ON_MS = 1000U;
 constexpr uint32_t FREQUENCY_REQUIRES_CAL_LED_OFF_MS = 250U;
+constexpr uint32_t FREQUENCY_MAIN_LOOP_MS = 1000U;
 constexpr uint32_t MAX_CALIBRATION_HOLD_MS = 5000U;
 constexpr uint16_t CALIBRATION_PPO2x1000 = 970U; // See Note 1
 constexpr uint16_t MAX_DEVIATION_FROM_SETPOINT = 100U;
@@ -160,11 +161,12 @@ void fsm_read_cells(const uint32_t now){
 }
 
 
-bool helper_load_waiting_timer_state(uint32_t *cell_timer, uint32_t *lcd_timer, uint32_t *led_timer, bool *led_on){
+bool helper_load_waiting_timer_state(uint32_t *cell_timer, uint32_t *lcd_timer, uint32_t *led_timer, bool *led_on, uint32_t *main_loop_timer){
   return ((system_get_cell_read_timer(cell_timer) == STATE_OK) &&
     (system_get_lcd_update_timer(lcd_timer) == STATE_OK) &&
     (system_get_divemode_led_timer(led_timer) == STATE_OK) &&
-    (system_get_divemode_led_on(led_on) == STATE_OK));
+    (system_get_divemode_led_on(led_on) == STATE_OK)) &&
+    (system_get_main_loop_timer(main_loop_timer) == STATE_OK);
 }
 
 void fsm_waiting(const uint32_t now){
@@ -172,6 +174,7 @@ void fsm_waiting(const uint32_t now){
   uint32_t last_lcd_update_time_ms = 0U;
   uint32_t divemode_led_timer_ms = 0U;
   uint32_t divemode_flash_interval_ms = 0U;
+  uint32_t main_loop_timer_ms = 0U;
   uint16_t cells_raw[THREE_CELLS] = {0U};
   sensor_vote_result_t voted_cell = SENSOR_UNINITIALISED;
   uint16_t voted_ppo2 = 0U;
@@ -198,7 +201,11 @@ void fsm_waiting(const uint32_t now){
 
   voted_cell = get_voted_sensor(cells_raw, &voted_ppo2);
 
-  if (!helper_load_waiting_timer_state(&last_cell_read_time_ms, &last_lcd_update_time_ms, &divemode_led_timer_ms, &divemode_led_on)){
+  if (!helper_load_waiting_timer_state(&last_cell_read_time_ms,
+                                        &last_lcd_update_time_ms,
+                                        &divemode_led_timer_ms,
+                                        &divemode_led_on,
+                                        &main_loop_timer_ms)){
     Serial.println("Error loading timer data in fsm_waiting");
     handle_error();
   }
