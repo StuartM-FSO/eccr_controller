@@ -239,6 +239,11 @@ void fsm_waiting(const uint32_t now){
     Serial.println("display_handler_off failed in fsm_waiting");
     handle_error();
   }
+
+  if(has_timer_elapsed(now, main_loop_timer_ms, FREQUENCY_MAIN_LOOP_MS)){
+    Serial.println("Main loop run");
+    system_set_main_loop_timer(now);
+  }
 }
 
 uint32_t get_divemode_flash_interval_ms(bool divemode_led_on, bool display_switch_on, bool initial_calibration_required){
