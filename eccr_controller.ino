@@ -217,7 +217,6 @@ void fsm_waiting(const uint32_t now){
   }
 
   if(display_switch_on){
-    divemode_flash_interval_ms = (divemode_led_on) ? FREQUENCY_DATAMODE_LED_ON_MS : FREQUENCY_DATAMODE_LED_OFF_MS;
     if(has_timer_elapsed(now, last_lcd_update_time_ms, FREQUENCY_LCD_UPDATE_MS)){
       if(display_handler_screen_on(cells_raw, initial_calibration_required, voted_cell) != DISPLAY_STATUS_OK){
         Serial.println("display_handler_on failed in fsm_waiting");
@@ -226,22 +225,31 @@ void fsm_waiting(const uint32_t now){
       system_set_lcd_update_timer(now);
     }
   } else {
-    if(initial_calibration_required){
-      divemode_flash_interval_ms = (divemode_led_on) ? FREQUENCY_REQUIRES_CAL_LED_ON_MS : FREQUENCY_REQUIRES_CAL_LED_OFF_MS;
-    } else {
-      divemode_flash_interval_ms = (divemode_led_on) ? FREQUENCY_DIVEMODE_LED_ON_MS : FREQUENCY_DIVEMODE_LED_OFF_MS;
-    }
     if(display_handler_screen_off() != DISPLAY_STATUS_OK){
       Serial.println("display_handler_off failed in fsm_waiting");
       handle_error();
     }
   }
 
+  divemode_flash_interval_ms = get_divemode_flash_interval_ms(divemode_led_on, display_switch_on, initial_calibration_required);
+
   if(has_timer_elapsed(now, divemode_led_timer_ms, divemode_flash_interval_ms)){
     divemode_led_on = !divemode_led_on;
     gpio_led_on(divemode_led_on);
     system_set_divemode_led_on(divemode_led_on);
     system_set_divemode_led_timer(now);
+  }
+}
+
+uint32_t get_divemode_flash_interval_ms(bool divemode_led_on, bool display_switch_on, bool initial_calibration_required){
+  if(display_switch_on){
+    return ((divemode_led_on) ? FREQUENCY_DATAMODE_LED_ON_MS : FREQUENCY_DATAMODE_LED_OFF_MS);
+  } else {
+    if(initial_calibration_required){
+      return ((divemode_led_on) ? FREQUENCY_REQUIRES_CAL_LED_ON_MS : FREQUENCY_REQUIRES_CAL_LED_OFF_MS);
+    } else {
+      return ((divemode_led_on) ? FREQUENCY_DIVEMODE_LED_ON_MS : FREQUENCY_DIVEMODE_LED_OFF_MS);
+    }
   }
 }
 
