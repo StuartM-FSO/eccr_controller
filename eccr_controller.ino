@@ -227,17 +227,6 @@ void fsm_waiting(const uint32_t now){
     system_set_divemode_led_timer(now);
   }
 
-  /* if(display_switch_on){
-    if(has_timer_elapsed(now, last_lcd_update_time_ms, FREQUENCY_LCD_UPDATE_MS)){
-      if(display_handler_screen_on(cells_raw, initial_calibration_required, voted_cell) != DISPLAY_STATUS_OK){
-        Serial.println("display_handler_on failed in fsm_waiting");
-        handle_error();
-      }
-      system_set_lcd_update_timer(now);
-    }
-    return;
-  } */
-
   if(display_switch_on){
     system_set_fsm_state(FSM_DATA_DISPLAY);
     return;
