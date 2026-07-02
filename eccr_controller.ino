@@ -162,7 +162,11 @@ void fsm_read_cells(const uint32_t now){
     system_set_fsm_state(FSM_FAILED_SAFE);
     return;
   }
-  system_set_fsm_state(FSM_WAITING);
+  if(gpio_slide_switch_on() == SWITCH_ON){
+    system_set_fsm_state(FSM_DATA_DISPLAY);
+  } else {
+    system_set_fsm_state(FSM_WAITING);
+  }
 }
 
 
