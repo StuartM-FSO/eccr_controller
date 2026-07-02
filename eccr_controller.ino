@@ -8,6 +8,7 @@
 #include "display_hal.h"
 #include "format_for_print.h"
 #include "eeprom_hal.h"
+#include "rgb_led_hal.h"
 #include <Wire.h>
 
 typedef enum{
@@ -17,7 +18,8 @@ typedef enum{
   INIT_FAILED_ADC_START,
   INIT_FAILED_GPIO,
   INIT_FAILED_DISPLAY,
-  INIT_FAILED_EEPROM
+  INIT_FAILED_EEPROM,
+  INIT_FAILED_RGB
 } init_state_t;
 
 typedef enum {
@@ -61,6 +63,8 @@ void setup() {
     initialisation_state = INIT_FAILED_DISPLAY;
   } else if(eeprom_init() != MEM_OK){
     initialisation_state = INIT_FAILED_EEPROM;
+  } else if(rgb_init() != RGB_OK){
+    initialisation_state = INIT_FAILED_RGB;
   } else {
     initialisation_state = INIT_SUCCESS;
   }
