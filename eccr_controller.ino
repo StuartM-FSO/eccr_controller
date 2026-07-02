@@ -183,8 +183,6 @@ void fsm_waiting(const uint32_t now){
   sensor_vote_result_t voted_cell = SENSOR_UNINITIALISED;
   uint16_t voted_ppo2 = 0U;
   bool divemode_led_on = false;
-  bool display_switch_on = gpio_slide_switch_on();
-  bool calibration_button_down = gpio_momentary_pushed();
   bool initial_calibration_required = is_initial_calibration_required();
 
   if(initial_calibration_required){
@@ -192,11 +190,7 @@ void fsm_waiting(const uint32_t now){
     // solenoid management added
   }
 
-  if(display_switch_on && calibration_button_down){
-    system_set_calibration_hold_timer(now);
-    system_set_fsm_state(FSM_CALIBRATION_ACTIVATED);
-    return;
-  }
+  
 
   if(helper_assign_current_cell_raw_to_array(cells_raw) != STATE_OK){
     Serial.println("cell assignment error in fsm_waiting");
@@ -219,15 +213,15 @@ void fsm_waiting(const uint32_t now){
     return;
   }
 
-  divemode_flash_interval_ms = get_divemode_flash_interval_ms(divemode_led_on, display_switch_on, initial_calibration_required);
+  /* divemode_flash_interval_ms = get_divemode_flash_interval_ms(divemode_led_on, display_switch_on, initial_calibration_required);
   if(has_timer_elapsed(now, divemode_led_timer_ms, divemode_flash_interval_ms)){
     divemode_led_on = !divemode_led_on;
     gpio_led_on(divemode_led_on);
     system_set_divemode_led_on(divemode_led_on);
     system_set_divemode_led_timer(now);
-  }
+  } */
 
-  if(display_switch_on){
+  if(gpio_slide_switch_on() == SWITCH_ON){
     system_set_fsm_state(FSM_DATA_DISPLAY);
     return;
   }
@@ -250,9 +244,18 @@ void fsm_data_display(uint32_t now){
   bool initial_calibration_required = is_initial_calibration_required();
   sensor_vote_result_t voted_cell = SENSOR_UNINITIALISED;
   uint16_t voted_ppo2 = 0U;
+  switchstate_t display_switch = gpio_slide_switch_on();
+  switchstate_t calibration_button = gpio_momentary_pushed();
 
-  if(!gpio_slide_switch_on()){
+  if(display_switch = SWITCH_OFF){
     system_set_fsm_state(FSM_WAITING);
+    return;
+  }
+
+  if((display_switch == SWITCH_ON) && (calibration_button == SWITCH_ON)){
+    Serial.println("+");
+    system_set_calibration_hold_timer(now);
+    system_set_fsm_state(FSM_CALIBRATION_ACTIVATED);
     return;
   }
 
