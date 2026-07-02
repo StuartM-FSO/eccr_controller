@@ -281,12 +281,12 @@ void fsm_data_display(uint32_t now){
     return;
   }  
 
-  voted_cell = get_voted_sensor(cells_raw, &voted_ppo2);
-
   if(helper_assign_current_cell_raw_to_array(cells_raw) != STATE_OK){
     Serial.println("cell assignment error in fsm_waiting");
     handle_error();
   }
+
+  voted_cell = get_voted_sensor(cells_raw, &voted_ppo2);
 
   if(system_get_lcd_update_timer(&last_lcd_update_time_ms) != STATE_OK){
     Serial.println("Error getting lcd timer in fsm_data_display");
