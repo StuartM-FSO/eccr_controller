@@ -213,13 +213,13 @@ void fsm_waiting(const uint32_t now){
     return;
   }
 
-  /* divemode_flash_interval_ms = get_divemode_flash_interval_ms(divemode_led_on, display_switch_on, initial_calibration_required);
+  divemode_flash_interval_ms = get_divemode_flash_interval_ms(divemode_led_on, false, initial_calibration_required);
   if(has_timer_elapsed(now, divemode_led_timer_ms, divemode_flash_interval_ms)){
     divemode_led_on = !divemode_led_on;
     gpio_led_on(divemode_led_on);
     system_set_divemode_led_on(divemode_led_on);
     system_set_divemode_led_timer(now);
-  } */
+  }
 
   if(gpio_slide_switch_on() == SWITCH_ON){
     system_set_fsm_state(FSM_DATA_DISPLAY);
