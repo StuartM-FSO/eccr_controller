@@ -72,7 +72,7 @@ void setup() {
   if(initialisation_state != INIT_SUCCESS){
     system_set_fsm_state(FSM_UNINITIALISED);
   } else {
-    system_set_fsm_state(FSM_READ_CELLS);
+    system_set_fsm_state(FSM_START_UP);
     Serial.println("Success");
   }
 
@@ -115,6 +115,9 @@ void loop() {
     case FSM_DATA_DISPLAY:
       fsm_data_display(now);
       break;
+    case FSM_START_UP:
+      fsm_start_up(now);
+      break;
     default:
       system_set_fsm_state(FSM_FAILED_SAFE);
       break;
@@ -147,8 +150,11 @@ bool is_initial_calibration_required(void){
 
 
 //  1 - FSM Handlers
-
-
+void fsm_start_up(const uint32_t now){
+  Serial.println("Start up");
+  delay(1000);
+  system_set_fsm_state(FSM_READ_CELLS);
+}
 
 void fsm_read_cells(const uint32_t now){
   if(system_set_cell_read_ready(false) != STATE_OK){
