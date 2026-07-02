@@ -44,6 +44,7 @@ rgb_status_t rgb_init(void){
   state.flash_counter = 0;
   state.flash_on = false;
   state.initialised = true;
+  rgb_led.setBrightness(5);
   return RGB_OK;
 }
 
@@ -130,6 +131,14 @@ rgb_status_t rgb_get_counter(uint8_t *counter){
     return RGB_INVALID_PARAMETER;
   }
   *counter = state.flash_counter;
+  return RGB_OK;
+}
+
+rgb_status_t rgb_set_counter(const uint8_t counter){
+  if(!state.initialised){
+    return RGB_UNINITIALISED;
+  }
+  state.flash_counter = counter;
   return RGB_OK;
 }
 

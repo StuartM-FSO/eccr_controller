@@ -47,6 +47,8 @@ constexpr uint16_t CALIBRATION_PPO2x1000 = 970U; // See Note 1
 constexpr uint16_t MAX_DEVIATION_FROM_SETPOINT = 100U;
 constexpr uint16_t CALIBRATION_ACCEPTABLE_LIMIT_MINIMUM_RAW = 100U; // Limit to be established through testing
 constexpr uint16_t CALIBRATION_ACCEPTABLE_LIMIT_MAXIMUM_RAW = 10000U; // Limit to be established through testing
+constexpr uint32_t RGB_STARTUP_TIME_MS = 1000U;
+constexpr uint8_t NUMBER_OF_COLOURS_IN_SEQUENCE = 4U;
 
 void setup() {
   init_state_t initialisation_state = INIT_BEGIN;
@@ -74,6 +76,7 @@ void setup() {
   } else {
     system_set_fsm_state(FSM_START_UP);
     system_set_screen_written_once(false);
+    rgb_set_flash_timer(millis());
     Serial.println("Success");
   }
 
@@ -152,16 +155,36 @@ bool is_initial_calibration_required(void){
 
 //  1 - FSM Handlers
 void fsm_start_up(const uint32_t now){
-  if(!system_get_screen_written_once()){
-    display_clear();
-    display_set_colour(DISPLAY_WHITE, DISPLAY_BLACK);
-    display_font_size(1);
-    display_set_cursor(0, 0);
-    display_print("STARTING");
-    display_update();
-    Serial.println("Screen write");
-    system_set_screen_written_once(true);
+  uint8_t count = 0U;
+  uint32_t rgb_timer = 0U;
+  rgb_colour_t colours[] = {RGB_WHITE, RGB_GREEN, RGB_YELLOW, RGB_BLUE, RGB_RED};
+
+  if(rgb_get_counter(&count) != RGB_OK){
+    Serial.println("Failed get counter fsm_start_up");
+    handle_error();
   }
+
+  if(rgb_get_flash_timer(&rgb_timer) != RGB_OK){
+    Serial.println("Failed get timer fsm_start_up");
+    handle_error();
+  }
+
+  if(has_timer_elapsed(now, rgb_timer, ONE_SECOND_MS)){
+    count++;
+    if(count > NUMBER_OF_COLOURS_IN_SEQUENCE){
+      system_set_fsm_state(FSM_READ_CELLS);
+      display_clear();
+      display_update();
+      rgb_reset_counter();
+      rgb_off();
+      system_set_screen_written_once(false);
+      return;
+    }
+    rgb_set_counter(count);
+    rgb_set_flash_timer(now);
+  }
+  rgb_on(colours[count]);
+
 }
 
 void fsm_read_cells(const uint32_t now){

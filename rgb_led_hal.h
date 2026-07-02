@@ -1,3 +1,4 @@
+#include <sys/_stdint.h>
 #ifndef RGB_LED_HAL_H
 #define RGB_LED_HAL_H
 
@@ -35,6 +36,7 @@ rgb_status_t rgb_set_flash_on(const bool flash_on);
 rgb_status_t rgb_increment_counter(void);
 rgb_status_t rgb_reset_counter(void);
 rgb_status_t rgb_get_counter(uint8_t *counter);
+rgb_status_t rgb_set_counter(const uint8_t counter);
 bool rgb_get_init(void);
 
 
