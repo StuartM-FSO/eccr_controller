@@ -34,7 +34,7 @@ constexpr uint32_t FREQUENCY_CELL_READ_MS = 1000U;
 constexpr uint32_t FREQUENCY_LCD_UPDATE_MS = 1000U;
 constexpr uint32_t FREQUENCY_DIVEMODE_LED_ON_MS = 200U;
 constexpr uint32_t FREQUENCY_DIVEMODE_LED_OFF_MS = 3000U;
-constexpr uint32_t FREQUENCY_DATAMODE_LED_ON_MS = 100U;
+constexpr uint32_t FREQUENCY_DATAMODE_LED_ON_MS = 200U;
 constexpr uint32_t FREQUENCY_DATAMODE_LED_OFF_MS = 400U;
 constexpr uint32_t FREQUENCY_REQUIRES_CAL_LED_ON_MS = 1000U;
 constexpr uint32_t FREQUENCY_REQUIRES_CAL_LED_OFF_MS = 250U;
@@ -250,6 +250,9 @@ void fsm_data_display(uint32_t now){
   uint16_t voted_ppo2 = 0U;
   switchstate_t display_switch = gpio_slide_switch_on();
   switchstate_t calibration_button = gpio_momentary_pushed();
+  uint32_t divemode_flash_interval_ms = 0U;
+  bool divemode_led_on = false;
+  uint32_t divemode_led_timer_ms = 0U;
 
   if(display_switch == SWITCH_OFF){
     system_set_fsm_state(FSM_WAITING);
@@ -296,7 +299,21 @@ void fsm_data_display(uint32_t now){
       handle_error();
     }
     system_set_lcd_update_timer(now);
-    Serial.println("fsm_data_display");
+    //Serial.println("fsm_data_display");
+  }
+
+  if(system_get_divemode_led_timer(&divemode_led_timer_ms) != STATE_OK){
+    Serial.println("Timer read failure fsm_data_display");
+    handle_error();
+  }
+  if(system_get_divemode_led_on(&divemode_led_on) != STATE_OK){
+    Serial.println("led state read failure fsm_data_display");
+    handle_error();
+  }
+  if(has_timer_elapsed(now, divemode_led_timer_ms, 500U)){
+    gpio_led_on(divemode_led_on);
+    system_set_divemode_led_timer(now);
+    system_set_divemode_led_on(!divemode_led_on);
   }
 }
 
