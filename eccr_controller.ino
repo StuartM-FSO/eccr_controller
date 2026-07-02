@@ -247,13 +247,12 @@ void fsm_data_display(uint32_t now){
   switchstate_t display_switch = gpio_slide_switch_on();
   switchstate_t calibration_button = gpio_momentary_pushed();
 
-  if(display_switch = SWITCH_OFF){
+  if(display_switch == SWITCH_OFF){
     system_set_fsm_state(FSM_WAITING);
     return;
   }
 
   if((display_switch == SWITCH_ON) && (calibration_button == SWITCH_ON)){
-    Serial.println("+");
     system_set_calibration_hold_timer(now);
     system_set_fsm_state(FSM_CALIBRATION_ACTIVATED);
     return;
