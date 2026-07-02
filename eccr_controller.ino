@@ -73,6 +73,7 @@ void setup() {
     system_set_fsm_state(FSM_UNINITIALISED);
   } else {
     system_set_fsm_state(FSM_START_UP);
+    system_set_screen_written_once(false);
     Serial.println("Success");
   }
 
@@ -151,9 +152,16 @@ bool is_initial_calibration_required(void){
 
 //  1 - FSM Handlers
 void fsm_start_up(const uint32_t now){
-  Serial.println("Start up");
-  delay(1000);
-  system_set_fsm_state(FSM_READ_CELLS);
+  if(!system_get_screen_written_once()){
+    display_clear();
+    display_set_colour(DISPLAY_WHITE, DISPLAY_BLACK);
+    display_font_size(1);
+    display_set_cursor(0, 0);
+    display_print("STARTING");
+    display_update();
+    Serial.println("Screen write");
+    system_set_screen_written_once(true);
+  }
 }
 
 void fsm_read_cells(const uint32_t now){
