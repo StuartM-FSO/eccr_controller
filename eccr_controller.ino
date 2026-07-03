@@ -49,6 +49,8 @@ constexpr uint16_t CALIBRATION_ACCEPTABLE_LIMIT_MINIMUM_RAW = 100U; // Limit to 
 constexpr uint16_t CALIBRATION_ACCEPTABLE_LIMIT_MAXIMUM_RAW = 10000U; // Limit to be established through testing
 constexpr uint32_t RGB_STARTUP_TIME_MS = 1000U;
 constexpr uint8_t NUMBER_OF_COLOURS_IN_SEQUENCE = 4U;
+constexpr uint16_t SETPOINT_X1000 = 970U;
+constexpr uint16_t SETPOINT_MAX_DRIFT_X1000 = 100U;
 
 void setup() {
   init_state_t initialisation_state = INIT_BEGIN;
@@ -151,7 +153,18 @@ bool is_initial_calibration_required(void){
   return false;
 }
 
+rgb_colour_t get_led_colour_from_ppo2(uint16_t ppo2){
+  uint16_t max_ppo2 = SETPOINT_X1000 + MAX_DEVIATION_FROM_SETPOINT;
+  uint16_t min_ppo2 = SETPOINT_X1000 - MAX_DEVIATION_FROM_SETPOINT;
 
+  if(ppo2 < min_ppo2){
+    return RGB_RED;
+  }
+  if(ppo2 > max_ppo2){
+    return RGB_BLUE;
+  }
+  return RGB_GREEN;
+}
 
 //  1 - FSM Handlers
 void fsm_start_up(const uint32_t now){
@@ -261,7 +274,7 @@ void fsm_waiting(const uint32_t now){
   if(has_timer_elapsed(now, divemode_led_timer_ms, divemode_flash_interval_ms)){
     divemode_led_on = !divemode_led_on;
     if(divemode_led_on){
-      rgb_on(RGB_GREEN);
+      rgb_on(get_led_colour_from_ppo2(voted_ppo2));
     } else {
       rgb_off();
     }
@@ -280,7 +293,10 @@ void fsm_waiting(const uint32_t now){
   }
 
   if(has_timer_elapsed(now, main_loop_timer_ms, FREQUENCY_MAIN_LOOP_MS)){
-    Serial.println("Main loop run");
+    Serial.print("Main loop run ");
+    Serial.print(voted_cell);
+    Serial.print(" ");
+    Serial.println(voted_ppo2);
     system_set_main_loop_timer(now);
   }
 }
@@ -344,7 +360,10 @@ void fsm_data_display(uint32_t now){
       handle_error();
     }
     system_set_lcd_update_timer(now);
-    //Serial.println("fsm_data_display");
+    Serial.print("Screen on ");
+    Serial.print(voted_cell);
+    Serial.print(" ");
+    Serial.println(voted_ppo2);
   }
 
   if(system_get_divemode_led_timer(&divemode_led_timer_ms) != STATE_OK){
