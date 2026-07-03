@@ -35,8 +35,8 @@ typedef enum {
 constexpr uint32_t FREQUENCY_CELL_READ_MS = 1000U;
 constexpr uint32_t FREQUENCY_CELL_READ_DATA_MODE_MS = 500U;
 constexpr uint32_t FREQUENCY_LCD_UPDATE_MS = 1000U;
-constexpr uint32_t FREQUENCY_DIVEMODE_LED_ON_MS = 200U;
-constexpr uint32_t FREQUENCY_DIVEMODE_LED_OFF_MS = 3000U;
+constexpr uint32_t FREQUENCY_DIVEMODE_LED_ON_MS = 250U;
+constexpr uint32_t FREQUENCY_DIVEMODE_LED_OFF_MS = 2000U;
 constexpr uint32_t FREQUENCY_DATAMODE_LED_ON_MS = 200U;
 constexpr uint32_t FREQUENCY_DATAMODE_LED_OFF_MS = 400U;
 constexpr uint32_t FREQUENCY_REQUIRES_CAL_LED_ON_MS = 1000U;
@@ -184,7 +184,7 @@ void fsm_start_up(const uint32_t now){
     rgb_set_flash_timer(now);
   }
   rgb_on(colours[count]);
-
+  gpio_led_on(false);
 }
 
 void fsm_read_cells(const uint32_t now){
@@ -236,8 +236,6 @@ void fsm_waiting(const uint32_t now){
     // solenoid management added
   }
 
-  
-
   if(helper_assign_current_cell_raw_to_array(cells_raw) != STATE_OK){
     Serial.println("cell assignment error in fsm_waiting");
     handle_error();
@@ -262,7 +260,11 @@ void fsm_waiting(const uint32_t now){
   divemode_flash_interval_ms = get_divemode_flash_interval_ms(divemode_led_on, false, initial_calibration_required);
   if(has_timer_elapsed(now, divemode_led_timer_ms, divemode_flash_interval_ms)){
     divemode_led_on = !divemode_led_on;
-    gpio_led_on(divemode_led_on);
+    if(divemode_led_on){
+      rgb_on(RGB_GREEN);
+    } else {
+      rgb_off();
+    }
     system_set_divemode_led_on(divemode_led_on);
     system_set_divemode_led_timer(now);
   }
@@ -298,6 +300,7 @@ void fsm_data_display(uint32_t now){
 
   if(display_switch == SWITCH_OFF){
     system_set_fsm_state(FSM_WAITING);
+    gpio_led_on(false);
     return;
   }
 
