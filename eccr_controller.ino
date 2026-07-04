@@ -406,12 +406,12 @@ uint32_t get_divemode_flash_interval_ms(const bool divemode_led_on, const bool d
 }
 
 void fsm_calibration_activated(const uint32_t now){
-  bool button_pushed = gpio_momentary_pushed();
-  bool slide_switch_on = gpio_slide_switch_on();
+  switchstate_t button = gpio_momentary_pushed();
+  switchstate_t slide_switch = gpio_slide_switch_on();
   bool screen_written_once = system_get_screen_written_once();
   uint32_t calibration_hold_time_ms = 0U;
 
-  if(!slide_switch_on || !button_pushed){
+  if((slide_switch != SWITCH_ON) || (button != SWITCH_ON)){
     system_set_screen_written_once(false);
     system_set_fsm_state(FSM_WAITING);
     return;
@@ -444,7 +444,7 @@ void fsm_calibration_writing(const uint32_t now){
     Serial.println("Failed at cal write");
     handle_error();
   }
-  if(has_timer_elapsed(now, last_ms, (ONE_SECOND_MS * 3)) && !gpio_momentary_pushed()){
+  if(has_timer_elapsed(now, last_ms, (ONE_SECOND_MS * 3)) && (gpio_momentary_pushed() != SWITCH_ON)){
     for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
       system_get_cell_reading(&reading_raw[channel], channel);
       system_set_calibration_factor(reading_raw[channel], channel);
