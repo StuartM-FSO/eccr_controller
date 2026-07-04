@@ -226,7 +226,7 @@ void fsm_read_cells(const uint32_t now){
 }
 
 
-bool helper_load_waiting_timer_state(uint32_t *cell_timer, uint32_t *led_timer, bool *led_on, uint32_t *main_loop_timer){
+bool helper_load_waiting_timer_state(uint32_t *const cell_timer, uint32_t *const led_timer, bool *const led_on, uint32_t *const main_loop_timer){
   return ((system_get_cell_read_timer(cell_timer) == STATE_OK) &&
     (system_get_divemode_led_timer(led_timer) == STATE_OK) &&
     (system_get_divemode_led_on(led_on) == STATE_OK)) &&
@@ -491,7 +491,7 @@ system_state_t helper_assign_current_cell_raw_to_array(uint16_t cells_raw[]){
   return STATE_OK;
 }
 
-sensor_vote_result_t get_voted_sensor(uint16_t cells_raw[], uint16_t *voted_ppo2){
+sensor_vote_result_t get_voted_sensor(const uint16_t cells_raw[], uint16_t *const voted_ppo2){
   if((voted_ppo2 == NULL) || (cells_raw == NULL)){
     return SENSOR_FAULT;
   }
@@ -548,7 +548,7 @@ static uint16_t diff_u16(const uint16_t a, const uint16_t b){
   return (a > b) ? (a - b) : (b - a);
 }
 
-system_state_t convert_raw_to_ppo2(const uint16_t raw, const uint8_t channel, uint16_t * const raw_converted_to_ppo2){
+system_state_t convert_raw_to_ppo2(const uint16_t raw, const uint8_t channel, uint16_t *const raw_converted_to_ppo2){
   uint16_t reference_value = 0U;
   uint32_t ppo2 = 0U;
   const uint32_t scale = CALIBRATION_PPO2x1000;
@@ -606,7 +606,7 @@ display_status_t display_handler_screen_off(void){
   return display_update();
 }
 
-system_state_t print_ppo2_top_line_oled(uint16_t cells_ppo2[], const sensor_vote_result_t voted_cell){
+system_state_t print_ppo2_top_line_oled(const uint16_t cells_ppo2[], const sensor_vote_result_t voted_cell){
   char buffer_ppo2[FORMATTING_PPO2_STR_LEN];
 
   if(cells_ppo2 == NULL){
@@ -627,7 +627,7 @@ system_state_t print_ppo2_top_line_oled(uint16_t cells_ppo2[], const sensor_vote
   return STATE_OK;
 }
 
-system_state_t print_mv_bottom_line_oled(uint16_t cells_mv[], const sensor_vote_result_t voted_cell){
+system_state_t print_mv_bottom_line_oled(const uint16_t cells_mv[], const sensor_vote_result_t voted_cell){
   char buffer_mv[FORMATTING_INTEGER_STR_LEN];
 
   if(cells_mv == NULL){
@@ -650,7 +650,7 @@ system_state_t print_mv_bottom_line_oled(uint16_t cells_mv[], const sensor_vote_
   return STATE_OK;
 }
 
-display_status_t display_handler_screen_on(uint16_t cells_raw[], const bool calibration_required, const sensor_vote_result_t voted_cell){
+display_status_t display_handler_screen_on(const uint16_t cells_raw[], const bool calibration_required, const sensor_vote_result_t voted_cell){
   uint16_t cells_ppo2[THREE_CELLS] = {0U};
   uint16_t cells_mv[THREE_CELLS] = {0U};
   //sensor_vote_result_t voted_cell;
