@@ -32,7 +32,7 @@ typedef enum {
   SENSOR_COUNT_END // Do not add types beyond this
 } sensor_vote_result_t;
 
-constexpr uint32_t FREQUENCY_CELL_READ_MS = 1000U;
+constexpr uint32_t FREQUENCY_CELL_READ_DIVE_MODE_MS = 1000U;
 constexpr uint32_t FREQUENCY_CELL_READ_DATA_MODE_MS = 500U;
 constexpr uint32_t FREQUENCY_LCD_UPDATE_MS = 1000U;
 constexpr uint32_t FREQUENCY_DIVEMODE_LED_ON_MS = 250U;
@@ -264,7 +264,7 @@ void fsm_waiting(const uint32_t now){
     handle_error();
   }
 
-  if(has_timer_elapsed(now, last_cell_read_time_ms, FREQUENCY_CELL_READ_MS)){
+  if(has_timer_elapsed(now, last_cell_read_time_ms, FREQUENCY_CELL_READ_DIVE_MODE_MS)){
     system_set_fsm_state(FSM_READ_CELLS);
     system_set_cell_read_timer(now);
     return;
