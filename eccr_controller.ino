@@ -36,7 +36,7 @@ constexpr uint32_t FREQUENCY_CELL_READ_DIVE_MODE_MS = 1000U;
 constexpr uint32_t FREQUENCY_CELL_READ_DATA_MODE_MS = 500U;
 constexpr uint32_t FREQUENCY_LCD_UPDATE_MS = 1000U;
 constexpr uint32_t FREQUENCY_DIVEMODE_LED_ON_MS = 250U;
-constexpr uint32_t FREQUENCY_DIVEMODE_LED_OFF_MS = 2000U;
+constexpr uint32_t FREQUENCY_DIVEMODE_LED_OFF_MS = 3000U;
 constexpr uint32_t FREQUENCY_DATAMODE_LED_ON_MS = 200U;
 constexpr uint32_t FREQUENCY_DATAMODE_LED_OFF_MS = 400U;
 constexpr uint32_t FREQUENCY_REQUIRES_CAL_LED_ON_MS = 1000U;
@@ -377,7 +377,15 @@ void fsm_data_display(uint32_t now){
     handle_error();
   }
   if(has_timer_elapsed(now, divemode_led_timer_ms, 500U)){
-    gpio_led_on(divemode_led_on);
+    rgb_colour_t flash_colour;
+
+    flash_colour = (initial_calibration_required) ? RGB_WHITE : RGB_YELLOW;
+    if(divemode_led_on){
+      rgb_on(flash_colour);
+    } else {
+      rgb_off();
+    }
+    //gpio_led_on(divemode_led_on);
     system_set_divemode_led_timer(now);
     system_set_divemode_led_on(!divemode_led_on);
   }
