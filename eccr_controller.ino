@@ -243,6 +243,7 @@ void fsm_waiting(const uint32_t now){
   uint16_t voted_ppo2 = 0U;
   bool divemode_led_on = false;
   bool initial_calibration_required = is_initial_calibration_required();
+  rgb_colour_t flash_colour = RGB_WHITE;
 
   if(initial_calibration_required){
     // To be done later when
@@ -274,7 +275,8 @@ void fsm_waiting(const uint32_t now){
   if(has_timer_elapsed(now, divemode_led_timer_ms, divemode_flash_interval_ms)){
     divemode_led_on = !divemode_led_on;
     if(divemode_led_on){
-      rgb_on(get_led_colour_from_ppo2(voted_ppo2));
+      flash_colour = (initial_calibration_required) ? RGB_WHITE : get_led_colour_from_ppo2(voted_ppo2);
+      rgb_on(flash_colour);
     } else {
       rgb_off();
     }
