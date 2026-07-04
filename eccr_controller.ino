@@ -171,7 +171,7 @@ rgb_colour_t get_led_colour_from_ppo2(const uint16_t ppo2){
 void fsm_start_up(const uint32_t now){
   uint8_t count = 0U;
   uint32_t rgb_timer = 0U;
-  rgb_colour_t colours[] = {RGB_WHITE, RGB_GREEN, RGB_YELLOW, RGB_BLUE, RGB_RED};
+  const rgb_colour_t COLOURS[] = {RGB_WHITE, RGB_GREEN, RGB_YELLOW, RGB_BLUE, RGB_RED};
 
   if(rgb_get_counter(&count) != RGB_OK){
     Serial.println("Failed get counter fsm_start_up");
@@ -197,7 +197,7 @@ void fsm_start_up(const uint32_t now){
     rgb_set_counter(count);
     rgb_set_flash_timer(now);
   }
-  rgb_on(colours[count]);
+  rgb_on(COLOURS[count]);
   gpio_led_on(false);
 }
 
