@@ -136,38 +136,19 @@ void loop() {
 //  1 - FSM Handlers
 //  2 - Cell handling
 //  3 - Display
+//  4 - General helpers
+
+
+
 
 //  0 - Work in progress
 
-bool is_initial_calibration_required(void){
-  uint16_t calibration_factor = 0U;
 
-  for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
-    if(system_get_calibration_factor(&calibration_factor, channel) != STATE_OK){
-      Serial.println("Read error in is_calibration_required");
-      handle_error();
-    }
-    if(calibration_factor == 0U){
-      return true;
-    }
-  }
-  return false;
-}
 
-rgb_colour_t get_led_colour_from_ppo2(const uint16_t ppo2){
-  uint16_t max_ppo2 = SETPOINT_X1000 + MAX_DEVIATION_FROM_SETPOINT;
-  uint16_t min_ppo2 = SETPOINT_X1000 - MAX_DEVIATION_FROM_SETPOINT;
 
-  if(ppo2 < min_ppo2){
-    return RGB_RED;
-  }
-  if(ppo2 > max_ppo2){
-    return RGB_BLUE;
-  }
-  return RGB_GREEN;
-}
 
 //  1 - FSM Handlers
+
 void fsm_start_up(const uint32_t now){
   uint8_t count = 0U;
   uint32_t rgb_timer = 0U;
@@ -222,40 +203,6 @@ void fsm_read_cells(const uint32_t now){
     system_set_fsm_state(FSM_DATA_DISPLAY);
   } else {
     system_set_fsm_state(FSM_WAITING);
-  }
-}
-
-
-bool helper_load_waiting_timer_state(uint32_t *const cell_timer, uint32_t *const main_loop_timer){
-  return ((system_get_cell_read_timer(cell_timer) == STATE_OK) &&
-    (system_get_main_loop_timer(main_loop_timer) == STATE_OK));
-}
-
-void fsm_waiting_helper_flash_led(const uint32_t now, const bool initial_calibration_required, const uint16_t voted_ppo2){
-  uint32_t divemode_flash_interval_ms = 0U;
-  uint32_t divemode_led_timer_ms = 0U;
-  constexpr bool SCREEN_OFF = false;
-  rgb_colour_t flash_colour;
-  bool divemode_led_on = false;
-
-  
-  if(system_get_divemode_led_timer(&divemode_led_timer_ms) != STATE_OK){
-    // Do something
-  }
-  if(system_get_divemode_led_on(&divemode_led_on) != STATE_OK){
-    // Do something
-  }
-  divemode_flash_interval_ms = get_divemode_flash_interval_ms(divemode_led_on, SCREEN_OFF, initial_calibration_required);
-  if(has_timer_elapsed(now, divemode_led_timer_ms, divemode_flash_interval_ms)){
-    divemode_led_on = !divemode_led_on;
-    if(divemode_led_on){
-      flash_colour = (initial_calibration_required) ? RGB_WHITE : get_led_colour_from_ppo2(voted_ppo2);
-      rgb_on(flash_colour);
-    } else {
-      rgb_off();
-    }
-    system_set_divemode_led_on(divemode_led_on);
-    system_set_divemode_led_timer(now);
   }
 }
 
@@ -399,18 +346,6 @@ void fsm_data_display(const uint32_t now){
   }
 }
 
-uint32_t get_divemode_flash_interval_ms(const bool divemode_led_on, const bool display_switch_on, const bool initial_calibration_required){
-  if(display_switch_on){
-    return ((divemode_led_on) ? FREQUENCY_DATAMODE_LED_ON_MS : FREQUENCY_DATAMODE_LED_OFF_MS);
-  } else {
-    if(initial_calibration_required){
-      return ((divemode_led_on) ? FREQUENCY_REQUIRES_CAL_LED_ON_MS : FREQUENCY_REQUIRES_CAL_LED_OFF_MS);
-    } else {
-      return ((divemode_led_on) ? FREQUENCY_DIVEMODE_LED_ON_MS : FREQUENCY_DIVEMODE_LED_OFF_MS);
-    }
-  }
-}
-
 void fsm_calibration_activated(const uint32_t now){
   switchstate_t button = gpio_momentary_pushed();
   switchstate_t slide_switch = gpio_slide_switch_on();
@@ -472,6 +407,21 @@ void fsm_calibration_writing(const uint32_t now){
 }
 
 //  2 - Cell handling
+
+bool is_initial_calibration_required(void){
+  uint16_t calibration_factor = 0U;
+
+  for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
+    if(system_get_calibration_factor(&calibration_factor, channel) != STATE_OK){
+      Serial.println("Read error in is_calibration_required");
+      handle_error();
+    }
+    if(calibration_factor == 0U){
+      return true;
+    }
+  }
+  return false;
+}
 
 system_state_t helper_assign_current_cell_raw_to_array(uint16_t cells_raw[]){
   bool cell_read_ready = false;
@@ -699,6 +649,65 @@ display_status_t display_handler_screen_on(const uint16_t cells_raw[], const boo
     return DISPLAY_STATUS_HW_ERROR;
   }
   return DISPLAY_STATUS_OK;
+}
+
+//  4 - General helpers
+
+rgb_colour_t get_led_colour_from_ppo2(const uint16_t ppo2){
+  uint16_t max_ppo2 = SETPOINT_X1000 + MAX_DEVIATION_FROM_SETPOINT;
+  uint16_t min_ppo2 = SETPOINT_X1000 - MAX_DEVIATION_FROM_SETPOINT;
+
+  if(ppo2 < min_ppo2){
+    return RGB_RED;
+  }
+  if(ppo2 > max_ppo2){
+    return RGB_BLUE;
+  }
+  return RGB_GREEN;
+}
+
+bool helper_load_waiting_timer_state(uint32_t *const cell_timer, uint32_t *const main_loop_timer){
+  return ((system_get_cell_read_timer(cell_timer) == STATE_OK) &&
+    (system_get_main_loop_timer(main_loop_timer) == STATE_OK));
+}
+
+void fsm_waiting_helper_flash_led(const uint32_t now, const bool initial_calibration_required, const uint16_t voted_ppo2){
+  uint32_t divemode_flash_interval_ms = 0U;
+  uint32_t divemode_led_timer_ms = 0U;
+  constexpr bool SCREEN_OFF = false;
+  rgb_colour_t flash_colour;
+  bool divemode_led_on = false;
+  
+  if(system_get_divemode_led_timer(&divemode_led_timer_ms) != STATE_OK){
+    // Do something
+  }
+  if(system_get_divemode_led_on(&divemode_led_on) != STATE_OK){
+    // Do something
+  }
+  divemode_flash_interval_ms = get_divemode_flash_interval_ms(divemode_led_on, SCREEN_OFF, initial_calibration_required);
+  if(has_timer_elapsed(now, divemode_led_timer_ms, divemode_flash_interval_ms)){
+    divemode_led_on = !divemode_led_on;
+    if(divemode_led_on){
+      flash_colour = (initial_calibration_required) ? RGB_WHITE : get_led_colour_from_ppo2(voted_ppo2);
+      rgb_on(flash_colour);
+    } else {
+      rgb_off();
+    }
+    system_set_divemode_led_on(divemode_led_on);
+    system_set_divemode_led_timer(now);
+  }
+}
+
+uint32_t get_divemode_flash_interval_ms(const bool divemode_led_on, const bool display_switch_on, const bool initial_calibration_required){
+  if(display_switch_on){
+    return ((divemode_led_on) ? FREQUENCY_DATAMODE_LED_ON_MS : FREQUENCY_DATAMODE_LED_OFF_MS);
+  } else {
+    if(initial_calibration_required){
+      return ((divemode_led_on) ? FREQUENCY_REQUIRES_CAL_LED_ON_MS : FREQUENCY_REQUIRES_CAL_LED_OFF_MS);
+    } else {
+      return ((divemode_led_on) ? FREQUENCY_DIVEMODE_LED_ON_MS : FREQUENCY_DIVEMODE_LED_OFF_MS);
+    }
+  }
 }
 
 // DEBUG
