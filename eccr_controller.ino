@@ -55,24 +55,47 @@ constexpr uint16_t SETPOINT_MAX_DRIFT_X1000 = 100U;
 
 void setup() {
   init_state_t initialisation_state = INIT_BEGIN;
+  bool proceed = true;
+
   Wire.begin();
 
   serial_begin(9600);
-  if(state_init() != STATE_OK){
+
+
+  if((state_init() != STATE_OK) && (proceed)){
+    Serial.println("state init");
     initialisation_state = INIT_FAILED_STATE;
-  } else if(adc_init() != ADC_STATUS_OK){
+    proceed = false;
+  }
+  if((adc_init() != ADC_STATUS_OK) && (proceed)){
+    Serial.println("adc init");
     initialisation_state = INIT_FAILED_ADC_START;
-  } else if(gpio_init() != GPIO_STATUS_OK){
+    proceed = false;
+  }
+  if((gpio_init() != GPIO_STATUS_OK) && (proceed)){
+    Serial.println("gpio init");
     initialisation_state = INIT_FAILED_GPIO;
-  } else if(display_init() != DISPLAY_STATUS_OK){
+    proceed = false;
+  }
+  if((display_init() != DISPLAY_STATUS_OK) && (proceed)){
+    Serial.println("display init");
     initialisation_state = INIT_FAILED_DISPLAY;
-  } else if(eeprom_init() != MEM_OK){
+    proceed = false;
+  }
+  if((eeprom_init() != MEM_OK) && (proceed)){
+    Serial.println("eeprom init");
     initialisation_state = INIT_FAILED_EEPROM;
-  } else if(rgb_init() != RGB_OK){
+    proceed = false;
+  }
+  if((rgb_init() != RGB_OK) && (proceed)){
+    Serial.println("rgb init");
     initialisation_state = INIT_FAILED_RGB;
-  } else {
+    proceed = false;
+  }
+  if(proceed){
     initialisation_state = INIT_SUCCESS;
   }
+  Serial.println(initialisation_state);
 
   if(initialisation_state != INIT_SUCCESS){
     system_set_fsm_state(FSM_UNINITIALISED);
@@ -83,7 +106,7 @@ void setup() {
     Serial.println("Success");
   }
 
-  if(assign_cell_calibration_factors() != STATE_OK){
+  if((assign_cell_calibration_factors() != STATE_OK) && (proceed)){
     system_set_fsm_state(FSM_FAILED_SAFE);
     Serial.println("EEPROM read failed");
   }

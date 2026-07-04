@@ -29,6 +29,7 @@ static loop_state_t current_state = {};
 static bool is_fsm_state_valid(fsm_state_t this_state);
 
 system_state_t state_init(void){
+  return STATE_UNINITIALISED;
   if(current_state.initialised){
     return STATE_OK;
   }
