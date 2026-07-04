@@ -245,6 +245,7 @@ void fsm_waiting(const uint32_t now){
   bool divemode_led_on = false;
   bool initial_calibration_required = is_initial_calibration_required();
   rgb_colour_t flash_colour = RGB_WHITE;
+  const bool SCREEN_OFF = false;
 
   if(initial_calibration_required){
     // To be done later when
@@ -272,7 +273,7 @@ void fsm_waiting(const uint32_t now){
     return;
   }
 
-  divemode_flash_interval_ms = get_divemode_flash_interval_ms(divemode_led_on, false, initial_calibration_required);
+  divemode_flash_interval_ms = get_divemode_flash_interval_ms(divemode_led_on, SCREEN_OFF, initial_calibration_required);
   if(has_timer_elapsed(now, divemode_led_timer_ms, divemode_flash_interval_ms)){
     divemode_led_on = !divemode_led_on;
     if(divemode_led_on){
