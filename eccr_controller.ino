@@ -154,7 +154,7 @@ bool is_initial_calibration_required(void){
   return false;
 }
 
-rgb_colour_t get_led_colour_from_ppo2(uint16_t ppo2){
+rgb_colour_t get_led_colour_from_ppo2(const uint16_t ppo2){
   uint16_t max_ppo2 = SETPOINT_X1000 + MAX_DEVIATION_FROM_SETPOINT;
   uint16_t min_ppo2 = SETPOINT_X1000 - MAX_DEVIATION_FROM_SETPOINT;
 
@@ -305,7 +305,7 @@ void fsm_waiting(const uint32_t now){
   }
 }
 
-void fsm_data_display(uint32_t now){
+void fsm_data_display(const uint32_t now){
   uint32_t last_lcd_update_time_ms = 0U;
   uint32_t last_cell_read_time_ms = 0U;
   uint16_t cells_raw[THREE_CELLS] = {0U};
@@ -393,7 +393,7 @@ void fsm_data_display(uint32_t now){
   }
 }
 
-uint32_t get_divemode_flash_interval_ms(bool divemode_led_on, bool display_switch_on, bool initial_calibration_required){
+uint32_t get_divemode_flash_interval_ms(const bool divemode_led_on, const bool display_switch_on, const bool initial_calibration_required){
   if(display_switch_on){
     return ((divemode_led_on) ? FREQUENCY_DATAMODE_LED_ON_MS : FREQUENCY_DATAMODE_LED_OFF_MS);
   } else {
@@ -544,7 +544,7 @@ sensor_vote_result_t get_voted_sensor(uint16_t cells_raw[], uint16_t *voted_ppo2
   return rejected;
 }
 
-static uint16_t diff_u16(uint16_t a, uint16_t b){
+static uint16_t diff_u16(const uint16_t a, const uint16_t b){
   return (a > b) ? (a - b) : (b - a);
 }
 
@@ -606,7 +606,7 @@ display_status_t display_handler_screen_off(void){
   return display_update();
 }
 
-system_state_t print_ppo2_top_line_oled(uint16_t cells_ppo2[], sensor_vote_result_t voted_cell){
+system_state_t print_ppo2_top_line_oled(uint16_t cells_ppo2[], const sensor_vote_result_t voted_cell){
   char buffer_ppo2[FORMATTING_PPO2_STR_LEN];
 
   if(cells_ppo2 == NULL){
@@ -627,7 +627,7 @@ system_state_t print_ppo2_top_line_oled(uint16_t cells_ppo2[], sensor_vote_resul
   return STATE_OK;
 }
 
-system_state_t print_mv_bottom_line_oled(uint16_t cells_mv[], sensor_vote_result_t voted_cell){
+system_state_t print_mv_bottom_line_oled(uint16_t cells_mv[], const sensor_vote_result_t voted_cell){
   char buffer_mv[FORMATTING_INTEGER_STR_LEN];
 
   if(cells_mv == NULL){
@@ -650,7 +650,7 @@ system_state_t print_mv_bottom_line_oled(uint16_t cells_mv[], sensor_vote_result
   return STATE_OK;
 }
 
-display_status_t display_handler_screen_on(uint16_t cells_raw[], bool calibration_required, sensor_vote_result_t voted_cell){
+display_status_t display_handler_screen_on(uint16_t cells_raw[], const bool calibration_required, const sensor_vote_result_t voted_cell){
   uint16_t cells_ppo2[THREE_CELLS] = {0U};
   uint16_t cells_mv[THREE_CELLS] = {0U};
   //sensor_vote_result_t voted_cell;
@@ -697,7 +697,7 @@ display_status_t display_handler_screen_on(uint16_t cells_raw[], bool calibratio
 
 // DEBUG
 
-void serial_begin(uint32_t baud_rate){
+void serial_begin(const uint32_t baud_rate){
   Serial.begin(baud_rate);
   while(!Serial){
     delay(1);
