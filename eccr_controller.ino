@@ -171,7 +171,7 @@ rgb_colour_t get_led_colour_from_ppo2(const uint16_t ppo2){
 void fsm_start_up(const uint32_t now){
   uint8_t count = 0U;
   uint32_t rgb_timer = 0U;
-  const rgb_colour_t COLOURS[] = {RGB_WHITE, RGB_GREEN, RGB_YELLOW, RGB_BLUE, RGB_RED};
+  static constexpr rgb_colour_t COLOURS[] = {RGB_WHITE, RGB_GREEN, RGB_YELLOW, RGB_BLUE, RGB_RED};
 
   if(rgb_get_counter(&count) != RGB_OK){
     Serial.println("Failed get counter fsm_start_up");
@@ -566,7 +566,7 @@ system_state_t convert_raw_to_ppo2(const uint16_t raw, const uint8_t channel, ui
   if(raw_converted_to_ppo2 == NULL){
     return STATE_INVALID_PARAMETER;
   }
-  if(reference_value == 0){
+  if(reference_value == 0U){
     return STATE_REQUIRES_CALIBRATION;
   }
   temp = ((uint32_t)raw) * scale;
