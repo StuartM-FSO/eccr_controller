@@ -226,26 +226,46 @@ void fsm_read_cells(const uint32_t now){
 }
 
 
-bool helper_load_waiting_timer_state(uint32_t *const cell_timer, uint32_t *const led_timer, bool *const led_on, uint32_t *const main_loop_timer){
+bool helper_load_waiting_timer_state(uint32_t *const cell_timer, uint32_t *const main_loop_timer){
   return ((system_get_cell_read_timer(cell_timer) == STATE_OK) &&
-    (system_get_divemode_led_timer(led_timer) == STATE_OK) &&
-    (system_get_divemode_led_on(led_on) == STATE_OK)) &&
-    (system_get_main_loop_timer(main_loop_timer) == STATE_OK);
+    (system_get_main_loop_timer(main_loop_timer) == STATE_OK));
+}
+
+void fsm_waiting_helper_flash_led(const uint32_t now, const bool initial_calibration_required, const uint16_t voted_ppo2){
+  uint32_t divemode_flash_interval_ms = 0U;
+  uint32_t divemode_led_timer_ms = 0U;
+  constexpr bool SCREEN_OFF = false;
+  rgb_colour_t flash_colour;
+  bool divemode_led_on = false;
+
+  
+  if(system_get_divemode_led_timer(&divemode_led_timer_ms) != STATE_OK){
+    // Do something
+  }
+  if(system_get_divemode_led_on(&divemode_led_on) != STATE_OK){
+    // Do something
+  }
+  divemode_flash_interval_ms = get_divemode_flash_interval_ms(divemode_led_on, SCREEN_OFF, initial_calibration_required);
+  if(has_timer_elapsed(now, divemode_led_timer_ms, divemode_flash_interval_ms)){
+    divemode_led_on = !divemode_led_on;
+    if(divemode_led_on){
+      flash_colour = (initial_calibration_required) ? RGB_WHITE : get_led_colour_from_ppo2(voted_ppo2);
+      rgb_on(flash_colour);
+    } else {
+      rgb_off();
+    }
+    system_set_divemode_led_on(divemode_led_on);
+    system_set_divemode_led_timer(now);
+  }
 }
 
 void fsm_waiting(const uint32_t now){
   uint32_t last_cell_read_time_ms = 0U;
-  //uint32_t last_lcd_update_time_ms = 0U;
-  uint32_t divemode_led_timer_ms = 0U;
-  uint32_t divemode_flash_interval_ms = 0U;
   uint32_t main_loop_timer_ms = 0U;
   uint16_t cells_raw[THREE_CELLS] = {0U};
   sensor_vote_result_t voted_cell = SENSOR_UNINITIALISED;
   uint16_t voted_ppo2 = 0U;
-  bool divemode_led_on = false;
   bool initial_calibration_required = is_initial_calibration_required();
-  rgb_colour_t flash_colour = RGB_WHITE;
-  const bool SCREEN_OFF = false;
 
   if(initial_calibration_required){
     // To be done later when
@@ -259,10 +279,7 @@ void fsm_waiting(const uint32_t now){
 
   voted_cell = get_voted_sensor(cells_raw, &voted_ppo2);
 
-  if (!helper_load_waiting_timer_state(&last_cell_read_time_ms,
-                                        &divemode_led_timer_ms,
-                                        &divemode_led_on,
-                                        &main_loop_timer_ms)){
+  if (!helper_load_waiting_timer_state(&last_cell_read_time_ms, &main_loop_timer_ms)){
     Serial.println("Error loading timer data in fsm_waiting");
     handle_error();
   }
@@ -271,19 +288,6 @@ void fsm_waiting(const uint32_t now){
     system_set_fsm_state(FSM_READ_CELLS);
     system_set_cell_read_timer(now);
     return;
-  }
-
-  divemode_flash_interval_ms = get_divemode_flash_interval_ms(divemode_led_on, SCREEN_OFF, initial_calibration_required);
-  if(has_timer_elapsed(now, divemode_led_timer_ms, divemode_flash_interval_ms)){
-    divemode_led_on = !divemode_led_on;
-    if(divemode_led_on){
-      flash_colour = (initial_calibration_required) ? RGB_WHITE : get_led_colour_from_ppo2(voted_ppo2);
-      rgb_on(flash_colour);
-    } else {
-      rgb_off();
-    }
-    system_set_divemode_led_on(divemode_led_on);
-    system_set_divemode_led_timer(now);
   }
 
   if(gpio_slide_switch_on() == SWITCH_ON){
@@ -303,6 +307,8 @@ void fsm_waiting(const uint32_t now){
     Serial.println(voted_ppo2);
     system_set_main_loop_timer(now);
   }
+
+  fsm_waiting_helper_flash_led(now, initial_calibration_required, voted_ppo2);
 }
 
 void fsm_data_display(const uint32_t now){
