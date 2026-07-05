@@ -106,7 +106,7 @@ void setup() {
     Serial.println("Success");
   }
 
-  if((assign_cell_calibration_factors() != STATE_OK) && (proceed)){
+  if((assign_cell_reference_readings() != STATE_OK) && (proceed)){
     system_set_fsm_state(FSM_FAILED_SAFE);
     Serial.println("EEPROM read failed");
   }
@@ -563,15 +563,15 @@ system_state_t cell_read(void){
   return STATE_OK;
 }
 
-system_state_t assign_cell_calibration_factors(void){
-  uint16_t temp_calibration_factors[THREE_CELLS];
+system_state_t assign_cell_reference_readings(void){
+  uint16_t temp_reference_readings[THREE_CELLS];
 
-  if(eeprom_read_calibration(temp_calibration_factors) != MEM_OK){
+  if(eeprom_read_calibration(temp_reference_readings) != MEM_OK){
     Serial.println("Cal read failed");
     handle_error();
   }
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
-    if(system_set_calibration_factor(temp_calibration_factors[channel], channel) != STATE_OK){
+    if(system_set_calibration_factor(temp_reference_readings[channel], channel) != STATE_OK){
       return STATE_FUNCTION_FAILED;
     }
   }
