@@ -6,7 +6,7 @@ typedef struct{
   bool display_on = false;
   bool divemode_led_on = false;
   fsm_state_t fsm_state = FSM_UNINITIALISED;
-  uint16_t cell_calibration_factor[THREE_CELLS] = {0U};
+  uint16_t cell_reference_readings[THREE_CELLS] = {0U};
   uint32_t cell_read_timer = 0U;
   uint32_t lcd_update_timer = 0U;
   uint32_t divemode_led_timer = 0U;
@@ -216,28 +216,28 @@ system_state_t system_set_divemode_led_on(const bool status){
   return STATE_OK;
 }
 
-system_state_t system_get_reference_reading(uint16_t * const calibration_factor, const uint8_t channel){
+system_state_t system_get_reference_reading(uint16_t * const reference_reading, const uint8_t channel){
   if(!current_state.initialised){
     return STATE_UNINITIALISED;
   }
-  if(calibration_factor == NULL){
+  if(reference_reading == NULL){
     return STATE_INVALID_PARAMETER;
   }
   if(channel >= THREE_CELLS){
     return STATE_INVALID_PARAMETER;
   }
-  *calibration_factor = current_state.cell_calibration_factor[channel];
+  *reference_reading = current_state.cell_reference_readings[channel];
   return STATE_OK;
 }
 
-system_state_t system_set_reference_reading(const uint16_t calibration_factor, const uint8_t channel){
+system_state_t system_set_reference_reading(const uint16_t reference_reading, const uint8_t channel){
   if(!current_state.initialised){
     return STATE_UNINITIALISED;
   }
   if(channel >= THREE_CELLS){
     return STATE_INVALID_PARAMETER;
   }
-  current_state.cell_calibration_factor[channel] = calibration_factor;
+  current_state.cell_reference_readings[channel] = reference_reading;
   return STATE_OK;
 }
 

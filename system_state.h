@@ -61,8 +61,8 @@ system_state_t system_set_display_on(const bool status);
 system_state_t system_get_divemode_led_on(bool * const status);
 system_state_t system_set_divemode_led_on(const bool status);
 
-system_state_t system_get_reference_reading(uint16_t * const calibration_factor, const uint8_t channel);
-system_state_t system_set_reference_reading(const uint16_t calibration_factor, const uint8_t channel);
+system_state_t system_get_reference_reading(uint16_t * const reference_reading, const uint8_t channel);
+system_state_t system_set_reference_reading(const uint16_t reference_reading, const uint8_t channel);
 
 system_state_t system_get_calibration_hold_timer(uint32_t *timer);
 system_state_t system_set_calibration_hold_timer(const uint32_t timer);
