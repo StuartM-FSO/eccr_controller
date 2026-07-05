@@ -411,7 +411,7 @@ void fsm_calibration_writing(const uint32_t now){
   if(has_timer_elapsed(now, last_ms, (ONE_SECOND_MS * 3)) && (gpio_momentary_pushed() != SWITCH_ON)){
     for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
       system_get_cell_reading(&reading_raw[channel], channel);
-      system_set_calibration_factor(reading_raw[channel], channel);
+      system_set_reference_reading(reading_raw[channel], channel);
     }
     if(eeprom_write_calibration(reading_raw) != MEM_OK){
       Serial.println("Cal write failed");
@@ -435,7 +435,7 @@ bool is_initial_calibration_required(void){
   uint16_t calibration_factor = 0U;
 
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
-    if(system_get_calibration_factor(&calibration_factor, channel) != STATE_OK){
+    if(system_get_reference_reading(&calibration_factor, channel) != STATE_OK){
       Serial.println("Read error in is_calibration_required");
       handle_error();
     }
@@ -533,7 +533,7 @@ system_state_t convert_raw_to_ppo2(const uint16_t raw, const uint8_t channel, ui
   const uint32_t scale = CALIBRATION_PPO2x1000;
   uint32_t temp = 0U;
 
-  if(system_get_calibration_factor(&reference_value, channel) != STATE_OK){
+  if(system_get_reference_reading(&reference_value, channel) != STATE_OK){
     return STATE_FUNCTION_FAILED;
   }
   if(raw_converted_to_ppo2 == NULL){
@@ -571,7 +571,7 @@ system_state_t assign_cell_reference_readings(void){
     handle_error();
   }
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
-    if(system_set_calibration_factor(temp_reference_readings[channel], channel) != STATE_OK){
+    if(system_set_reference_reading(temp_reference_readings[channel], channel) != STATE_OK){
       return STATE_FUNCTION_FAILED;
     }
   }

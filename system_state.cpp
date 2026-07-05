@@ -216,7 +216,7 @@ system_state_t system_set_divemode_led_on(const bool status){
   return STATE_OK;
 }
 
-system_state_t system_get_calibration_factor(uint16_t * const calibration_factor, const uint8_t channel){
+system_state_t system_get_reference_reading(uint16_t * const calibration_factor, const uint8_t channel){
   if(!current_state.initialised){
     return STATE_UNINITIALISED;
   }
@@ -230,7 +230,7 @@ system_state_t system_get_calibration_factor(uint16_t * const calibration_factor
   return STATE_OK;
 }
 
-system_state_t system_set_calibration_factor(const uint16_t calibration_factor, const uint8_t channel){
+system_state_t system_set_reference_reading(const uint16_t calibration_factor, const uint8_t channel){
   if(!current_state.initialised){
     return STATE_UNINITIALISED;
   }
