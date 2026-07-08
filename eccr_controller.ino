@@ -32,6 +32,11 @@ typedef enum {
   SENSOR_COUNT_END // Do not add types beyond this
 } sensor_vote_result_t;
 
+typedef enum{
+  LOW_OUTPUT_CELL,
+  HIGH_OUTPUT_CELL
+} cell_type_t;
+
 constexpr uint32_t FREQUENCY_CELL_READ_DIVE_MODE_MS = 1000U;
 constexpr uint32_t FREQUENCY_CELL_READ_DATA_MODE_MS = 500U;
 constexpr uint32_t FREQUENCY_LCD_UPDATE_MS = 1000U;
@@ -46,14 +51,17 @@ constexpr uint32_t FREQUENCY_MAIN_LOOP_MS = 1000U;
 constexpr uint32_t MAX_CALIBRATION_HOLD_MS = 5000U;
 constexpr uint16_t CALIBRATION_PPO2x1000 = 970U; // See Note 1
 constexpr uint16_t MAX_DEVIATION_FROM_SETPOINT = 100U;
-constexpr uint16_t LO_CALIBRATION_ACCEPTABLE_LIMIT_MINIMUM_RAW = 4000U; // Limit to be established through testing
-constexpr uint16_t LO_CALIBRATION_ACCEPTABLE_LIMIT_MAXIMUM_RAW = 9800U; // Limit to be established through testing
-constexpr uint16_t HO_CALIBRATION_ACCEPTABLE_LIMIT_MINIMUM_RAW = 9000U; // Limit to be established through testing
-constexpr uint16_t HO_CALIBRATION_ACCEPTABLE_LIMIT_MAXIMUM_RAW = 18300U; // Limit to be established through testing
+constexpr uint16_t LO_CALIBRATION_ACCEPTABLE_LIMIT_MINIMUM_MV = 33U; // Limit to be established through testing
+constexpr uint16_t LO_CALIBRATION_ACCEPTABLE_LIMIT_MAXIMUM_MV = 76U; // Limit to be established through testing
+constexpr uint16_t HO_CALIBRATION_ACCEPTABLE_LIMIT_MINIMUM_MV = 71U; // Limit to be established through testing
+constexpr uint16_t HO_CALIBRATION_ACCEPTABLE_LIMIT_MAXIMUM_MV = 143U; // Limit to be established through testing
 constexpr uint32_t RGB_STARTUP_TIME_MS = 1000U;
 constexpr uint8_t NUMBER_OF_COLOURS_IN_SEQUENCE = 4U;
 constexpr uint16_t SETPOINT_X1000 = 970U;
 constexpr uint16_t SETPOINT_MAX_DRIFT_X1000 = 100U;
+
+// Define cell type in code
+constexpr cell_type_t CELL_TYPE = LOW_OUTPUT_CELL;
 
 void setup() {
   init_state_t initialisation_state = INIT_BEGIN;
@@ -305,6 +313,23 @@ void fsm_waiting(const uint32_t now){
   fsm_waiting_helper_flash_led(now, initial_calibration_required, voted_ppo2);
 }
 
+bool are_all_cells_in_range_for_calibration(uint16_t cells[]){
+  uint16_t low_limit_mv = 0U;
+  uint16_t high_limit_mv = 0U;
+  uint16_t converted_mv = 0U;
+
+  low_limit_mv = (CELL_TYPE == LOW_OUTPUT_CELL) ? LO_CALIBRATION_ACCEPTABLE_LIMIT_MINIMUM_MV : HO_CALIBRATION_ACCEPTABLE_LIMIT_MINIMUM_MV;
+  high_limit_mv = (CELL_TYPE == LOW_OUTPUT_CELL) ? LO_CALIBRATION_ACCEPTABLE_LIMIT_MAXIMUM_MV : HO_CALIBRATION_ACCEPTABLE_LIMIT_MAXIMUM_MV;
+
+  for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
+    converted_mv = adc_convert_raw_to_mV(cells[channel]);
+    if((converted_mv < low_limit_mv) || (converted_mv > high_limit_mv)){
+      return false;
+    }
+  }
+  return true;
+}
+
 void fsm_data_display(const uint32_t now){
   uint32_t last_lcd_update_time_ms = 0U;
   uint32_t last_cell_read_time_ms = 0U;
@@ -317,28 +342,12 @@ void fsm_data_display(const uint32_t now){
   uint32_t divemode_flash_interval_ms = 0U;
   bool divemode_led_on = false;
   uint32_t divemode_led_timer_ms = 0U;
-  bool calibration_available = false;
+  bool calibration_available = true;
 
   if(display_switch == SWITCH_OFF){
     system_set_fsm_state(FSM_WAITING);
     gpio_led_on(false);
     return;
-  }
-
-  /* if((display_switch == SWITCH_ON) && (calibration_button == SWITCH_ON)){
-    system_set_calibration_hold_timer(now);
-    system_set_fsm_state(FSM_CALIBRATION_ACTIVATED);
-    return;
-  } */
-
-  if((display_switch == SWITCH_ON) && (calibration_button == SWITCH_ON)){
-    system_set_fsm_state(FSM_CALIBRATION_UNAVAILABLE);
-    return;
-  }
-
-  if(initial_calibration_required){
-    // To be done later when
-    // solenoid management added
   }
 
   if(system_get_cell_read_timer(&last_cell_read_time_ms) != STATE_OK){
@@ -350,11 +359,28 @@ void fsm_data_display(const uint32_t now){
     system_set_fsm_state(FSM_READ_CELLS);
     system_set_cell_read_timer(now);
     return;
-  }  
+  }
 
   if(helper_assign_current_cell_raw_to_array(cells_raw) != STATE_OK){
     Serial.println("cell assignment error in fsm_waiting");
     handle_error();
+  }
+
+  calibration_available = are_all_cells_in_range_for_calibration(cells_raw);
+
+  if((display_switch == SWITCH_ON) && (calibration_button == SWITCH_ON)){
+    if(calibration_available){
+      system_set_calibration_hold_timer(now);
+      system_set_fsm_state(FSM_CALIBRATION_ACTIVATED);
+    } else {
+      system_set_fsm_state(FSM_CALIBRATION_UNAVAILABLE);
+    }
+    return;
+  }
+
+  if(initial_calibration_required){
+    // To be done later when
+    // solenoid management added
   }
 
   voted_cell = get_voted_sensor(cells_raw, &voted_ppo2);
