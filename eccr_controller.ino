@@ -150,6 +150,9 @@ void loop() {
     case FSM_START_UP:
       fsm_start_up(now);
       break;
+    case FSM_CALIBRATION_UNAVAILABLE:
+      fsm_calibration_unavailable(now);
+      break;
     default:
       system_set_fsm_state(FSM_FAILED_SAFE);
       break;
@@ -168,7 +171,26 @@ void loop() {
 
 //  0 - Work in progress
 
+void fsm_calibration_unavailable(uint32_t now){
+  switchstate_t slide_switch = gpio_slide_switch_on();
+  switchstate_t push_button = gpio_momentary_pushed();
 
+  if(slide_switch != SWITCH_ON){
+    system_set_fsm_state(FSM_WAITING);
+    return;
+  }
+
+  if(push_button != SWITCH_ON){
+    system_set_fsm_state(FSM_DATA_DISPLAY);
+    return;
+  }
+
+  display_clear();
+  display_set_cursor(0, 0);
+  display_println("CALIBRATION");
+  display_println("UNAVAILABLE");
+  display_update();
+}
 
 
 
@@ -295,6 +317,7 @@ void fsm_data_display(const uint32_t now){
   uint32_t divemode_flash_interval_ms = 0U;
   bool divemode_led_on = false;
   uint32_t divemode_led_timer_ms = 0U;
+  bool calibration_available = false;
 
   if(display_switch == SWITCH_OFF){
     system_set_fsm_state(FSM_WAITING);
@@ -302,9 +325,14 @@ void fsm_data_display(const uint32_t now){
     return;
   }
 
-  if((display_switch == SWITCH_ON) && (calibration_button == SWITCH_ON)){
+  /* if((display_switch == SWITCH_ON) && (calibration_button == SWITCH_ON)){
     system_set_calibration_hold_timer(now);
     system_set_fsm_state(FSM_CALIBRATION_ACTIVATED);
+    return;
+  } */
+
+  if((display_switch == SWITCH_ON) && (calibration_button == SWITCH_ON)){
+    system_set_fsm_state(FSM_CALIBRATION_UNAVAILABLE);
     return;
   }
 
