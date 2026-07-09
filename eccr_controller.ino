@@ -428,7 +428,7 @@ void fsm_data_display(const uint32_t now){
 void fsm_calibration_activated(const uint32_t now){
   switchstate_t button = gpio_momentary_pushed();
   switchstate_t slide_switch = gpio_slide_switch_on();
-  bool screen_written_once = system_get_screen_written_once();
+  //bool screen_written_once = system_get_screen_written_once();
   uint32_t calibration_hold_time_ms = 0U;
 
   if((slide_switch != SWITCH_ON) || (button != SWITCH_ON)){
@@ -443,7 +443,7 @@ void fsm_calibration_activated(const uint32_t now){
     system_set_fsm_state(FSM_CALIBRATION_WRITING);
     return;
   }
-  if(!screen_written_once){
+  //if(!screen_written_once){
     display_clear();
     display_set_cursor(0, 0);
     display_println("HOLD TO");
@@ -452,8 +452,8 @@ void fsm_calibration_activated(const uint32_t now){
       Serial.println("Failed fsm_calibration_active");
       handle_error();
     }
-    system_set_screen_written_once(true);
-  }
+    //system_set_screen_written_once(true);
+  //}
 }
 
 void fsm_calibration_writing(const uint32_t now){
