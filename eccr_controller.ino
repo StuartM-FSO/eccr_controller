@@ -197,7 +197,10 @@ void fsm_calibration_unavailable(uint32_t now){
   display_set_cursor(0, 0);
   display_println("CALIBRATION");
   display_println("UNAVAILABLE");
-  display_update();
+  if(display_update() != DISPLAY_STATUS_OK){
+    Serial.println("fsm_calibration_unavailable");
+    handle_error();
+  }
 }
 
 
