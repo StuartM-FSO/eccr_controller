@@ -474,17 +474,29 @@ void fsm_calibration_activated(const uint32_t now){
   
   if((slide_switch != SWITCH_ON) || (button != SWITCH_ON)){
     //system_set_screen_written_once(false);
-    system_set_fsm_state(FSM_WAITING);
+    if(system_set_fsm_state(FSM_WAITING) != STATE_OK){
+      Serial.println("fsm_calibration_activated");
+      handle_error();
+    }
     return;
   }
 
-  system_get_calibration_hold_timer(&calibration_hold_time_ms);
+  if(system_get_calibration_hold_timer(&calibration_hold_time_ms) != STATE_OK){
+    Serial.println("fsm_calibration_activated");
+    handle_error();
+  }
   elapsed_time_ms = now - calibration_hold_time_ms;
   countdown = (uint8_t)((MAX_CALIBRATION_HOLD_MS - elapsed_time_ms) / ONE_SECOND_MS) + 1;
   if(has_timer_elapsed(now, calibration_hold_time_ms, MAX_CALIBRATION_HOLD_MS)){
     //system_set_screen_written_once(false);
-    system_set_calibration_hold_timer(now);
-    system_set_fsm_state(FSM_CALIBRATION_WRITING);
+    if(system_set_calibration_hold_timer(now) != STATE_OK){
+      Serial.println("fsm_calibration_activated");
+      handle_error();
+    }
+    if(system_set_fsm_state(FSM_CALIBRATION_WRITING) != STATE_OK){
+      Serial.println("fsm_calibration_activated");
+      handle_error();
+    }
     return;
   }
   
