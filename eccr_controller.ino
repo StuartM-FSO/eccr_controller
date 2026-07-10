@@ -424,7 +424,10 @@ void fsm_data_display(const uint32_t now){
       Serial.println("display_handler_on failed in fsm_waiting");
       handle_error();
     }
-    system_set_lcd_update_timer(now);
+    if(system_set_lcd_update_timer(now) != STATE_OK){
+      Serial.println("fsm_data_display");
+      handle_error();
+    }
     Serial.print("Screen on ");
     Serial.print(voted_cell);
     Serial.print(" ");
@@ -435,10 +438,12 @@ void fsm_data_display(const uint32_t now){
     Serial.println("Timer read failure fsm_data_display");
     handle_error();
   }
+
   if(system_get_divemode_led_on(&divemode_led_on) != STATE_OK){
     Serial.println("led state read failure fsm_data_display");
     handle_error();
   }
+
   if(has_timer_elapsed(now, divemode_led_timer_ms, FREQUENCY_DATAMODE_LED_FLASH_MS)){
     rgb_colour_t flash_colour;
 
@@ -449,8 +454,14 @@ void fsm_data_display(const uint32_t now){
       rgb_off();
     }
     //gpio_led_on(divemode_led_on);
-    system_set_divemode_led_timer(now);
-    system_set_divemode_led_on(!divemode_led_on);
+    if(system_set_divemode_led_timer(now) != STATE_OK){
+      Serial.println("fsm_data_display");
+      handle_error();
+    }
+    if(system_set_divemode_led_on(!divemode_led_on) != STATE_OK){
+      Serial.println("fsm_data_display");
+      handle_error();
+    }
   }
 }
 
