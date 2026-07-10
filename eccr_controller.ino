@@ -330,7 +330,7 @@ void fsm_waiting(const uint32_t now){
     system_set_main_loop_timer(now);
   }
 
-  fsm_waiting_helper_flash_led(now, initial_calibration_required, voted_ppo2);
+  fsm_waiting_helper_flash_led(now, initial_calibration_required, voted_ppo2); // No return value
 }
 
 bool are_all_cells_in_range_for_calibration(uint16_t cells[]){
@@ -390,10 +390,19 @@ void fsm_data_display(const uint32_t now){
 
   if((display_switch == SWITCH_ON) && (calibration_button == SWITCH_ON)){
     if(calibration_available){
-      system_set_calibration_hold_timer(now);
-      system_set_fsm_state(FSM_CALIBRATION_ACTIVATED);
+      if(system_set_calibration_hold_timer(now) != STATE_OK){
+        Serial.println("fsm_data_display");
+        handle_error();
+      }
+      if(system_set_fsm_state(FSM_CALIBRATION_ACTIVATED) != STATE_OK){
+        Serial.println("fsm_data_display");
+        handle_error();
+      }
     } else {
-      system_set_fsm_state(FSM_CALIBRATION_UNAVAILABLE);
+      if(system_set_fsm_state(FSM_CALIBRATION_UNAVAILABLE) != STATE_OK){
+        Serial.println("fsm_data_display");
+        handle_error();
+      }
     }
     return;
   }
