@@ -111,7 +111,7 @@ void setup() {
     system_set_fsm_state(FSM_UNINITIALISED);
   } else {
     system_set_fsm_state(FSM_START_UP);
-    system_set_screen_written_once(false);
+    //system_set_screen_written_once(false);
     rgb_set_flash_timer(millis());
     Serial.println("Success");
   }
@@ -224,17 +224,34 @@ void fsm_start_up(const uint32_t now){
     if(count > NUMBER_OF_COLOURS_IN_SEQUENCE){
       system_set_fsm_state(FSM_READ_CELLS);
       display_clear();
-      display_update();
-      rgb_reset_counter();
-      rgb_off();
-      system_set_screen_written_once(false);
+      if(display_update() != DISPLAY_STATUS_OK){
+        Serial.println("display failure fsm_startup");
+        handle_error();
+      }
+      if(rgb_reset_counter() != RGB_OK){
+        Serial.println("rgb error fsm_startup");
+        handle_error();
+      }
+      if(rgb_off() != RGB_OK){
+        Serial.println("rgb_off fsm_startup");
+      }
+      //system_set_screen_written_once(false);
       return;
     }
-    rgb_set_counter(count);
-    rgb_set_flash_timer(now);
+    if(rgb_set_counter(count) != RGB_OK){
+      Serial.println("fsm_startup");
+      handle_error();
+    }
+    if(rgb_set_flash_timer(now) != RGB_OK){
+      Serial.println("fsm_startup");
+      handle_error();
+    }
   }
-  rgb_on(COLOURS[count]);
-  gpio_led_on(false);
+  if(rgb_on(COLOURS[count]) != RGB_OK){
+    Serial.println("fsm_startup");
+    handle_error();
+  }
+  gpio_led_on(false); 
 }
 
 void fsm_read_cells(const uint32_t now){
@@ -433,7 +450,7 @@ void fsm_calibration_activated(const uint32_t now){
   uint8_t countdown = 0U;
   
   if((slide_switch != SWITCH_ON) || (button != SWITCH_ON)){
-    system_set_screen_written_once(false);
+    //system_set_screen_written_once(false);
     system_set_fsm_state(FSM_WAITING);
     return;
   }
@@ -442,7 +459,7 @@ void fsm_calibration_activated(const uint32_t now){
   elapsed_time_ms = now - calibration_hold_time_ms;
   countdown = (uint8_t)((MAX_CALIBRATION_HOLD_MS - elapsed_time_ms) / ONE_SECOND_MS) + 1;
   if(has_timer_elapsed(now, calibration_hold_time_ms, MAX_CALIBRATION_HOLD_MS)){
-    system_set_screen_written_once(false);
+    //system_set_screen_written_once(false);
     system_set_calibration_hold_timer(now);
     system_set_fsm_state(FSM_CALIBRATION_WRITING);
     return;
