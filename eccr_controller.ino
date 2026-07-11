@@ -835,8 +835,14 @@ void fsm_waiting_helper_flash_led(const uint32_t now, const bool initial_calibra
     } else {
       rgb_off();
     }
-    system_set_divemode_led_on(divemode_led_on);
-    system_set_divemode_led_timer(now);
+    if(system_set_divemode_led_on(divemode_led_on) != STATE_OK){
+      Serial.println("Failed at fm_waiting_helper_flash_led");
+      handle_error();
+    }
+    if(system_set_divemode_led_timer(now) != STATE_OK){
+      Serial.println("Failed at fm_waiting_helper_flash_led");
+      handle_error();
+    }
   }
 }
 
