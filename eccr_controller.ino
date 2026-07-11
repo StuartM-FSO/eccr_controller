@@ -55,10 +55,8 @@ constexpr uint16_t LO_CALIBRATION_ACCEPTABLE_LIMIT_MINIMUM_MV = 33U; // Limit to
 constexpr uint16_t LO_CALIBRATION_ACCEPTABLE_LIMIT_MAXIMUM_MV = 76U; // Limit to be established through testing
 constexpr uint16_t HO_CALIBRATION_ACCEPTABLE_LIMIT_MINIMUM_MV = 71U; // Limit to be established through testing
 constexpr uint16_t HO_CALIBRATION_ACCEPTABLE_LIMIT_MAXIMUM_MV = 143U; // Limit to be established through testing
-constexpr uint32_t RGB_STARTUP_TIME_MS = 1000U;
 constexpr uint8_t NUMBER_OF_COLOURS_IN_SEQUENCE = 4U;
 constexpr uint16_t SETPOINT_X1000 = 970U;
-constexpr uint16_t SETPOINT_MAX_DRIFT_X1000 = 100U;
 
 // Define cell type in code
 constexpr cell_type_t CELL_TYPE = LOW_OUTPUT_CELL;
@@ -357,7 +355,6 @@ void fsm_data_display(const uint32_t now){
   uint16_t voted_ppo2 = 0U;
   switchstate_t display_switch = gpio_slide_switch_on();
   switchstate_t calibration_button = gpio_momentary_pushed();
-  uint32_t divemode_flash_interval_ms = 0U;
   bool divemode_led_on = false;
   uint32_t divemode_led_timer_ms = 0U;
   bool calibration_available = true;
@@ -818,7 +815,7 @@ void fsm_waiting_helper_flash_led(const uint32_t now, const bool initial_calibra
   if(system_get_divemode_led_on(&divemode_led_on) != STATE_OK){
     // Do something
   }
-  divemode_flash_interval_ms = get_divemode_flash_interval_ms(divemode_led_on, SCREEN_OFF, initial_calibration_required);
+  divemode_flash_interval_ms = get_divemode_flash_interval_ms(divemode_led_on, initial_calibration_required);
   if(has_timer_elapsed(now, divemode_led_timer_ms, divemode_flash_interval_ms)){
     divemode_led_on = !divemode_led_on;
     if(divemode_led_on){
@@ -838,15 +835,11 @@ void fsm_waiting_helper_flash_led(const uint32_t now, const bool initial_calibra
   }
 }
 
-uint32_t get_divemode_flash_interval_ms(const bool divemode_led_on, const bool display_switch_on, const bool initial_calibration_required){
-  if(display_switch_on){
-    return ((divemode_led_on) ? FREQUENCY_DATAMODE_LED_ON_MS : FREQUENCY_DATAMODE_LED_OFF_MS);
-  } else {
-    if(initial_calibration_required){
+uint32_t get_divemode_flash_interval_ms(const bool divemode_led_on, const bool initial_calibration_required){
+  if(initial_calibration_required){
       return ((divemode_led_on) ? FREQUENCY_REQUIRES_CAL_LED_ON_MS : FREQUENCY_REQUIRES_CAL_LED_OFF_MS);
     } else {
       return ((divemode_led_on) ? FREQUENCY_DIVEMODE_LED_ON_MS : FREQUENCY_DIVEMODE_LED_OFF_MS);
-    }
   }
 }
 
