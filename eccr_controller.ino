@@ -523,8 +523,14 @@ void fsm_calibration_writing(const uint32_t now){
   }
   if(has_timer_elapsed(now, last_ms, (ONE_SECOND_MS * 3)) && (gpio_momentary_pushed() != SWITCH_ON)){
     for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
-      system_get_cell_reading(&reading_raw[channel], channel);
-      system_set_reference_reading(reading_raw[channel], channel);
+      if(system_get_cell_reading(&reading_raw[channel], channel) != STATE_OK){
+        Serial.println("Failed at cal write");
+        handle_error();
+      }
+      if(system_set_reference_reading(reading_raw[channel], channel) != STATE_OK){
+        Serial.println("Failed at cal write");
+        handle_error();
+      }
     }
     if(eeprom_write_calibration(reading_raw) != MEM_OK){
       Serial.println("Cal write failed");
