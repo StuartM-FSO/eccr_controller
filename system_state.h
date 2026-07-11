@@ -68,9 +68,6 @@ system_state_t system_set_reference_reading(const uint16_t reference_reading, co
 system_state_t system_get_calibration_hold_timer(uint32_t *timer);
 system_state_t system_set_calibration_hold_timer(const uint32_t timer);
 
-bool system_get_screen_written_once(void);
-void system_set_screen_written_once(bool state);
-
 system_state_t system_get_main_loop_timer(uint32_t * const timer);
 system_state_t system_set_main_loop_timer(const uint32_t timer);
 
