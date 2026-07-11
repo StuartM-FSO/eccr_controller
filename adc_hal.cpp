@@ -161,7 +161,7 @@ static bool is_connected(void){
     return (result == 0);
 }
 
-bool map_non_arduino(const uint16_t base_value, uint16_t * const scaled_value,
+static bool map_non_arduino(const uint16_t base_value, uint16_t * const scaled_value,
     const uint16_t in_min, const uint16_t in_max, const uint16_t out_min, const uint16_t out_max)
 {
     uint32_t numerator;
@@ -188,7 +188,7 @@ bool map_non_arduino(const uint16_t base_value, uint16_t * const scaled_value,
     return true;
 }
 
-bool sort_values(uint16_t arr[3]) {
+static bool sort_values(uint16_t arr[3]) {
     int16_t temp;
 
     if (arr[0] > arr[1]) {

@@ -298,6 +298,6 @@ system_state_t system_set_main_loop_timer(const uint32_t timer){
 
 // Private functions
 
-bool is_fsm_state_valid(fsm_state_t this_state){
+static bool is_fsm_state_valid(fsm_state_t this_state){
   return ((this_state > FSM_ZERO) && (this_state < FSM_END_COUNT));
 }
