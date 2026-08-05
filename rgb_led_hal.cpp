@@ -66,6 +66,7 @@ rgb_status_t rgb_off(void){
   }
   rgb_led.clear();
   rgb_led.show();
+  return RGB_OK;
 }
 
 rgb_status_t rgb_get_flash_timer(uint32_t *flash_timer){

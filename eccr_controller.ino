@@ -22,7 +22,8 @@ typedef enum{
   INIT_FAILED_GPIO,
   INIT_FAILED_DISPLAY,
   INIT_FAILED_EEPROM,
-  INIT_FAILED_RGB
+  INIT_FAILED_RGB,
+  INIT_FAILED_UART
 } init_state_t;
 
 typedef enum {
@@ -101,6 +102,11 @@ void setup() {
   if((rgb_init() != RGB_OK) && (proceed)){
     Serial.println("rgb init");
     initialisation_state = INIT_FAILED_RGB;
+    proceed = false;
+  }
+  if((comms_init(COM_TYPE_HOST) != COMMS_OK) && (proceed)){
+    Serial.println("UART failed init");
+    initialisation_state = INIT_FAILED_UART;
     proceed = false;
   }
   if(proceed){
