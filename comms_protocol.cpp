@@ -84,6 +84,7 @@ comms_return_t comms_init(const comms_system_type_t system_type){
   payload.id = 1U;
   payload.controller_status = CONTROLLER_UNKNOWN_STATUS;
   state.payload_sent = false;
+  Serial.println("Comms initialised");
   return COMMS_OK;
 }
 

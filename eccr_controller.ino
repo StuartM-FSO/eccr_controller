@@ -137,6 +137,13 @@ void loop() {
     system_set_fsm_state(FSM_FAILED_SAFE);
   }
 
+  if((current_state == FSM_WAITING) || (current_state == FSM_DATA_DISPLAY)){
+    if(comms_check() != COMMS_OK){
+      Serial.println("Error running comms check");
+      system_set_fsm_state(FSM_FAILED_SAFE);
+    }
+  }
+
   switch(current_state){
     case FSM_UNINITIALISED:
       Serial.println("fsm uninitialised");
