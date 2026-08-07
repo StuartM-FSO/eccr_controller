@@ -209,6 +209,29 @@ void fsm_calibration_unavailable(uint32_t now){
   }
 }
 
+system_state_t prepare_ppo2_for_payload(controller_status_t controller_status){
+  uint16_t ppo2_x1000[THREE_CELLS] = {0U};
+
+  for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
+    uint16_t raw_reading = 0U;
+
+    if(system_get_cell_reading(&raw_reading, channel) != STATE_OK){
+      Serial.println("Error getting raw in prepare payload");
+      // Handle error
+    }
+    if(convert_raw_to_ppo2(raw_reading, channel, &ppo2_x1000[channel]) != STATE_OK){
+      Serial.println("Error preparing payload");
+      // Handle error
+    }
+  }
+  if(comms_prepare_payload(ppo2_x1000, CONTROLLER_OK) != COMMS_OK){
+    Serial.println("Error writing payload");
+    // Handle error
+  }
+  Serial.println("Payload prepared");
+  return STATE_OK;
+}
+
 
 
 //  1 - FSM Handlers
@@ -279,6 +302,9 @@ void fsm_read_cells(const uint32_t now){
     system_set_fsm_state(FSM_FAILED_SAFE);
     return;
   }
+  if(prepare_ppo2_for_payload(CONTROLLER_OK) != STATE_OK){
+    Serial.println("Error preparing payload in fsm_read_cells");
+  }
   if(gpio_slide_switch_on() == SWITCH_ON){
     system_set_fsm_state(FSM_DATA_DISPLAY);
   } else {
@@ -327,6 +353,7 @@ void fsm_waiting(const uint32_t now){
     handle_error();
   }
 
+  // Delete for production
   if(has_timer_elapsed(now, main_loop_timer_ms, FREQUENCY_MAIN_LOOP_MS)){
     Serial.print("Main loop run ");
     Serial.print(voted_cell);
