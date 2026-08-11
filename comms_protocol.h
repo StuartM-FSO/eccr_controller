@@ -28,7 +28,7 @@ comms_return_t comms_handshake(void);
 comms_return_t comms_data_packet_request(void);
 comms_return_t comms_prepare_payload(const uint16_t * ppo2_x1000, const controller_status_t controller_status);
 
-comms_return_t comms_get_data_packet(data_packet_t *transfer_packet);
+comms_return_t comms_save_transfer_packet(data_packet_t *transfer_packet);
 
 bool comms_payload_updated(void);
 #endif

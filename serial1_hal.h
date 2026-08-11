@@ -36,5 +36,6 @@ serial_state_t serial1_listen_for_command(tx_command_t * const command);
 serial_state_t serial1_send_command(const tx_command_t command);
 serial_state_t serial1_send_data_packet(const data_packet_t datapacket);
 serial_state_t serial1_listen_for_data_packet(data_packet_t *datapacket);
+serial_state_t serial1_flush_serial_buffer(void);
 
 #endif

@@ -7,8 +7,8 @@
 #include "time_helpers.h"
 #include "serial1_hal.h"
 
-constexpr uint32_t MAX_ACK_WAIT_MS = 2000U;
-constexpr uint32_t MAX_DATA_PACKET_RQ_WAIT_MS = 500U;
+constexpr uint32_t MAX_ACK_WAIT_MS = 200U;
+constexpr uint32_t MAX_DATA_PACKET_RQ_WAIT_MS = 200U;
 constexpr uint8_t THREE_CELLS = 3U;
 constexpr uint16_t ZERO_CELL_READING = 0U;
 
@@ -22,6 +22,7 @@ typedef enum{
   COMSTATE_SEND_DATA_REQUEST,
   COMSTATE_WAIT_FOR_DATA_PACKET,
   COMSTATE_SEND_DATA_PACKET,
+  COMSTATE_START_UP,
   COMSTATE_DEBUG_SEQUENCE_END,
   COMSTATE_TIMEOUT,
   COMSTATE_END_COUNT
@@ -54,6 +55,7 @@ static void comstate_acknowledge_handshake(void);
 static void comstate_send_data_request(void);
 static void comstate_wait_for_data_packet(void);
 static void comstate_send_data_packet(void);
+static void comstate_start_up(void);
 
 static void comstate_debug_sequence_end(void);
 
@@ -75,7 +77,7 @@ comms_return_t comms_init(const comms_system_type_t system_type){
     return COMMS_SERIAL1_FAILED_INIT;
   }
   state.system_type = system_type;
-  state.internal_state = COMSTATE_LISTEN;
+  state.internal_state = COMSTATE_START_UP;
   state.ack_wait_timer_ms = 0U;
   state.handshake_timer_running = false;
   state.data_packet_request_timer_running = false;
@@ -84,7 +86,6 @@ comms_return_t comms_init(const comms_system_type_t system_type){
   payload.id = 1U;
   payload.controller_status = CONTROLLER_UNKNOWN_STATUS;
   state.payload_sent = false;
-  Serial.println("Comms initialised");
   return COMMS_OK;
 }
 
@@ -94,6 +95,8 @@ comms_return_t comms_check(void){
   }
 
   switch (state.internal_state) {
+    case COMSTATE_START_UP:
+      comstate_start_up();
     case COMSTATE_LISTEN:
       comstate_listen();
       break;
@@ -167,7 +170,7 @@ bool comms_payload_updated(void){
   return state.payload_has_updated;
 }
 
-comms_return_t comms_get_data_packet(data_packet_t *transfer_packet){
+comms_return_t comms_save_transfer_packet(data_packet_t *transfer_packet){
   uint16_t crc_calculated = crc16_ccitt((const uint8_t *)&payload, (sizeof(payload) - sizeof(payload.crc)));
 
   if(!state.initialised){
@@ -248,6 +251,16 @@ static void state_transition(comstate_t new_state){
   state.internal_state = new_state;
 }
 
+static void comstate_start_up(void){
+  if(serial1_flush_serial_buffer() != SER_OK){
+    Serial.println("COMSTATE_START_UP, flush serial buffer error");
+    // Handle error
+    for(;;);
+  }
+  state_transition(COMSTATE_LISTEN);
+  return;
+}
+
 static void comstate_wait_for_data_packet(void){
   uint32_t now = millis();
   uint32_t timeout = state.data_packet_request_timer_ms;
@@ -261,7 +274,7 @@ static void comstate_wait_for_data_packet(void){
   }
   listen_result = serial1_listen_for_data_packet(&payload);
   if(listen_result == SER_OK){
-    calculated_crc = crc16_ccitt((const uint8_t *)&payload, (sizeof(payload) - sizeof(payload.crc)));
+    calculated_crc = crc16_ccitt((const uint8_t *)&payload, (sizeof(payload) - sizeof(payload.crc))); // Not required for production
     Serial.print("Packet received, id: ");
     Serial.println(payload.id);
     Serial.print("RX CRC: ");
@@ -280,6 +293,9 @@ static void comstate_wait_for_data_packet(void){
   }
   if(listen_result == SER_UNINITIALISED){
     // ???
+  }
+  if(listen_result == SER_NOTHING_SENT){
+    return;
   }
 }
 

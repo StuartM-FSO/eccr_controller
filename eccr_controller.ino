@@ -10,7 +10,7 @@
 #include "eeprom_hal.h"
 #include "rgb_led_hal.h"
 #include "comms_protocol.h"
-#include "serial1_hal.h"
+//#include "serial1_hal.h"
 #include "comms_shared_definitions.h"
 #include <Wire.h>
 

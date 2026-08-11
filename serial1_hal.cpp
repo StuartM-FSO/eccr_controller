@@ -127,6 +127,16 @@ serial_state_t serial1_listen_for_data_packet(data_packet_t *datapacket){
   return SER_OK;
 }
 
+serial_state_t serial1_flush_serial_buffer(void){
+  if(!state.initialised){
+    return SER_UNINITIALISED;
+  }
+  if(Serial1.available() > 0){
+    Serial1.read();
+  }
+  return SER_OK;
+}
+
 
 
 // Private
