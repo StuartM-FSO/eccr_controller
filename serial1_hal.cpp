@@ -131,8 +131,9 @@ serial_state_t serial1_flush_serial_buffer(void){
   if(!state.initialised){
     return SER_UNINITIALISED;
   }
-  if(Serial1.available() > 0){
+  while(Serial1.available() > 0){
     Serial1.read();
+    // Add exit condition
   }
   return SER_OK;
 }
