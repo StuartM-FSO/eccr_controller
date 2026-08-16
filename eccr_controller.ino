@@ -9,9 +9,8 @@
 #include "format_for_print.h"
 #include "eeprom_hal.h"
 #include "rgb_led_hal.h"
-#include "comms_protocol.h"
+#include "comms_layer_host.h"
 //#include "serial1_hal.h"
-#include "comms_shared_definitions.h"
 #include <Wire.h>
 
 typedef enum{
