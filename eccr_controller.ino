@@ -103,8 +103,8 @@ void setup() {
     initialisation_state = INIT_FAILED_RGB;
     proceed = false;
   }
-  if((comms_init(COM_TYPE_HOST) != COMMS_OK) && (proceed)){
-    Serial.println("UART failed init");
+  if((host_init() != HOST_OK) && (proceed)){
+    Serial.println("Host init");
     initialisation_state = INIT_FAILED_UART;
     proceed = false;
   }
@@ -137,10 +137,7 @@ void loop() {
   }
 
   if((current_state == FSM_WAITING) || (current_state == FSM_DATA_DISPLAY)){
-    if(comms_check() != COMMS_OK){
-      Serial.println("Error running comms check");
-      system_set_fsm_state(FSM_FAILED_SAFE);
-    }
+    // Run comms layer here
   }
 
   switch(current_state){
@@ -215,25 +212,8 @@ void fsm_calibration_unavailable(uint32_t now){
   }
 }
 
-system_state_t prepare_ppo2_for_payload(controller_status_t controller_status){
-  uint16_t ppo2_x1000[THREE_CELLS] = {0U};
+system_state_t prepare_ppo2_for_payload(void){  // FIX!!!
 
-  for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
-    uint16_t raw_reading = 0U;
-
-    if(system_get_cell_reading(&raw_reading, channel) != STATE_OK){
-      Serial.println("Error getting raw in prepare payload");
-      // Handle error
-    }
-    if(convert_raw_to_ppo2(raw_reading, channel, &ppo2_x1000[channel]) != STATE_OK){
-      Serial.println("Error preparing payload");
-      // Handle error
-    }
-  }
-  if(comms_prepare_payload(ppo2_x1000, CONTROLLER_OK) != COMMS_OK){
-    Serial.println("Error writing payload");
-    // Handle error
-  }
   Serial.println("Payload prepared");
   return STATE_OK;
 }
@@ -308,7 +288,7 @@ void fsm_read_cells(const uint32_t now){
     system_set_fsm_state(FSM_FAILED_SAFE);
     return;
   }
-  if(prepare_ppo2_for_payload(CONTROLLER_OK) != STATE_OK){
+  if(prepare_ppo2_for_payload(/* FIX */) != STATE_OK){
     Serial.println("Error preparing payload in fsm_read_cells");
   }
   if(gpio_slide_switch_on() == SWITCH_ON){
