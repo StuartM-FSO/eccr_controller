@@ -5,7 +5,6 @@ typedef struct{
   bool initialised;
   bool display_on;
   bool divemode_led_on;
-  bool host_operational;
   fsm_state_t fsm_state;
   uint16_t cell_reference_readings[THREE_CELLS];
   uint32_t cell_read_timer;
