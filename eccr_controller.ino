@@ -131,10 +131,12 @@ void loop() {
   fsm_state_t current_state = FSM_UNINITIALISED;
   uint32_t now = millis();
 
-  if(host_run() == HOST_ERROR_HARD){
-    Serial.println("Comms layer failure");
+  if(system_is_startup_complete()){
+    if((host_run() == HOST_ERROR_HARD)){
+      Serial.println("Comms layer failure");
+    }
   }
-
+  
   if(system_get_fsm_state(&current_state) != STATE_OK){
     current_state = FSM_FAILED_SAFE;
     system_set_fsm_state(FSM_FAILED_SAFE);
@@ -257,6 +259,7 @@ void fsm_start_up(const uint32_t now){
   if(has_timer_elapsed(now, rgb_timer, ONE_SECOND_MS)){
     count++;
     if(count > NUMBER_OF_COLOURS_IN_SEQUENCE){
+      system_confirm_startup_complete();
       system_set_fsm_state(FSM_READ_CELLS);
       display_clear();
       if(display_update() != DISPLAY_STATUS_OK){

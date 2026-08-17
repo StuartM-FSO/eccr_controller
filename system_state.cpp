@@ -5,6 +5,7 @@ typedef struct{
   bool initialised;
   bool display_on;
   bool divemode_led_on;
+  bool startup_complete;
   fsm_state_t fsm_state;
   uint16_t cell_reference_readings[THREE_CELLS];
   uint32_t cell_read_timer;
@@ -38,8 +39,9 @@ system_state_t state_init(void){
   current_state.divemode_led_on = false;
   current_state.calibration_write_timer = 0U;
   current_state.display_on = false;
-  current_state.initialised = true;
+  current_state.startup_complete = false;
   current_state.main_loop_timer = 0U;
+  current_state.initialised = true;
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
     cells.cell_reading_raw[channel] = 0U;
   }
@@ -294,6 +296,14 @@ system_state_t system_set_main_loop_timer(const uint32_t timer){
   }
   current_state.main_loop_timer = timer;
   return STATE_OK;
+}
+
+bool system_is_startup_complete(void){
+  return current_state.startup_complete;
+}
+
+void system_confirm_startup_complete(void){
+  current_state.startup_complete = true;
 }
 
 // Private functions

@@ -71,4 +71,7 @@ system_state_t system_set_calibration_hold_timer(const uint32_t timer);
 system_state_t system_get_main_loop_timer(uint32_t * const timer);
 system_state_t system_set_main_loop_timer(const uint32_t timer);
 
+bool system_is_startup_complete(void);
+void system_confirm_startup_complete(void);
+
 #endif
