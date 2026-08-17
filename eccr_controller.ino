@@ -219,6 +219,7 @@ system_state_t prepare_ppo2_for_payload(void){  // FIX!!!
   uint16_t ppo2_x1000[THREE_CELLS] = {};
   uint16_t raw_reading = 0U;
   operational_state_t operational_state = OPSTATE_ZERO;
+  switchstate_t slide_switch = gpio_slide_switch_on();
 
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
     if(system_get_cell_reading(&raw_reading, channel) != STATE_OK){
@@ -232,7 +233,13 @@ system_state_t prepare_ppo2_for_payload(void){  // FIX!!!
       // Handle error
     }
   }
-  operational_state = OPSTATE_TESTMODE;
+  if(slide_switch == SWITCH_ON){
+    operational_state = OPSTATE_DATAMODE;
+  } else if(slide_switch == SWITCH_OFF){
+    operational_state = OPSTATE_DIVEMODE;
+  } else {
+    operational_state = OPSTATE_FAILURE;
+  }
   host_load_packet(ppo2_x1000, operational_state);
 
   Serial.println("Payload prepared");
