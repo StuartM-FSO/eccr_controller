@@ -37,5 +37,6 @@ bool serial1_handshake_received(void);
 ser_return_t serial1_get_latest_command(serial_command_t * const latest_command);
 ser_return_t serial1_get_latest_packet_id(uint32_t * const latest_id);
 ser_return_t serial1_get_ppo2(uint16_t * const ppo2_x1000, const uint8_t channel);
+ser_return_t serial1_get_operational_state(operational_state_t * const op_state);
 
 #endif

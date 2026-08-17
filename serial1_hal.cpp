@@ -240,6 +240,18 @@ ser_return_t serial1_get_ppo2(uint16_t * const ppo2_x1000, const uint8_t channel
   return SER_OK;
 }
 
+ser_return_t serial1_get_operational_state(operational_state_t * const op_state){
+  if(!state.initialised){
+    return SER_UNINITIALISED;
+  }
+  if(op_state == NULL){
+    return SER_INVALID_PARAMETER;
+  }
+
+  *op_state = payload.operational_state;
+  return SER_OK;
+}
+
 // Private
 
 static uint16_t crc16_ccitt(const uint8_t *data, size_t length){
