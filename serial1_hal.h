@@ -22,6 +22,12 @@ typedef enum{
   SER_TIMEOUT_FAILURE
 } ser_return_t;
 
+typedef enum{
+  OPSTATE_DIVEMODE,
+  OPSTATE_DATAMODE,
+  OPSTATE_FAILURE
+} operational_state_t;
+
 ser_return_t serial1_init(void);
 ser_return_t serial1_flush_serial_buffer(void);
 ser_return_t serial1_send_handshake_request(void);
