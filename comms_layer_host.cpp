@@ -4,9 +4,6 @@
 #include <stdint.h>
 #include "serial1_hal.h"
 
-
-constexpr uint8_t THREE_CELLS = 3U;
-
 typedef enum{
   COMSTATE_UNINITIALISED,
   COMSTATE_START_UP,
@@ -19,11 +16,8 @@ typedef enum{
 typedef struct{
   bool initialised;
   comms_fsm_state_t current_state;
+  operational_state_t operational_state;
 } internal_state_t;
-
-typedef struct{
-  uint16_t ppo2_x1000[THREE_CELLS];
-} eccr_state_t;
 
 static eccr_state_t eccr = {};
 
@@ -79,17 +73,21 @@ host_return_t host_run(void){
   return HOST_OK;
 }
 
-host_return_t host_load_packet(const uint16_t *ppo2_x1000){
+host_return_t host_load_packet(const uint16_t *ppo2_x1000, const operational_state_t opstate){
   if(!state.initialised){
     return HOST_UNINITIALISED;
   }
   if(ppo2_x1000 == NULL){
     return HOST_INVALID_PARAMETER;
   }
+  if((opstate <= OPSTATE_ZERO) || (opstate >= OPSTATE_END_COUNT)){
+    return HOST_INVALID_PARAMETER;
+  }
 
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
     eccr.ppo2_x1000[channel] = ppo2_x1000[channel];
   }
+  eccr.operational_state = opstate;
   return HOST_OK;
 }
 
@@ -159,7 +157,7 @@ static void comstate_acknowledge_handshake(void){
 
 static void comstate_send_data_packet(void){
   Serial.println("Sending data packet");
-  if(serial1_load_data_packet(eccr.ppo2_x1000) != SER_OK){
+  if(serial1_load_data_packet(eccr.ppo2_x1000, eccr.operational_state) != SER_OK){
     Serial.println("Error loading data packet");
   }
   if(serial1_send_payload() != SER_OK){

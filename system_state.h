@@ -31,8 +31,6 @@ typedef enum{
   FSM_END_COUNT // DO NOT ADD STATES BEYOND THIS
 } fsm_state_t;
 
-constexpr uint8_t THREE_CELLS = 3U;
-
 system_state_t state_init(void);
 
 system_state_t system_get_fsm_state(fsm_state_t * const state);

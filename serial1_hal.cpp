@@ -7,7 +7,6 @@
 #include "time_helpers.h"
 
 constexpr uint8_t SERIAL1_BAUD_RATE = 115200U;
-constexpr uint8_t THREE_CELLS = 3U;
 constexpr uint8_t ID_INCREMENT = 1U;
 constexpr uint32_t SERIAL_STARTUP_TIME_OUT_MS = 5000U;
 
@@ -167,7 +166,7 @@ ser_return_t serial1_send_payload(void){
   return SER_OK;
 }
 
-ser_return_t serial1_load_data_packet(uint16_t *ppo2_x1000){
+ser_return_t serial1_load_data_packet(uint16_t *ppo2_x1000, const operational_state_t op_state){
   if(!state.initialised){
     return SER_UNINITIALISED;
   }
@@ -179,7 +178,7 @@ ser_return_t serial1_load_data_packet(uint16_t *ppo2_x1000){
     payload.ppo2_x1000[channel] = ppo2_x1000[channel];
   }
   payload.id = state.last_packet_id + ID_INCREMENT;
-  payload.operational_state = OPSTATE_DIVEMODE;
+  payload.operational_state = op_state;
   payload.crc = crc16_ccitt((const uint8_t *)&payload, (sizeof(payload) - sizeof(payload.crc)));
   return SER_OK;
 }

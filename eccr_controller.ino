@@ -12,6 +12,7 @@
 #include "comms_layer_host.h"
 //#include "serial1_hal.h"
 #include <Wire.h>
+#include "shared.h"
 
 typedef enum{
   INIT_BEGIN,
@@ -217,6 +218,7 @@ void fsm_calibration_unavailable(uint32_t now){
 system_state_t prepare_ppo2_for_payload(void){  // FIX!!!
   uint16_t ppo2_x1000[THREE_CELLS] = {};
   uint16_t raw_reading = 0U;
+  operational_state_t operational_state = OPSTATE_ZERO;
 
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
     if(system_get_cell_reading(&raw_reading, channel) != STATE_OK){
@@ -230,8 +232,8 @@ system_state_t prepare_ppo2_for_payload(void){  // FIX!!!
       // Handle error
     }
   }
-
-  host_load_packet(ppo2_x1000);
+  operational_state = OPSTATE_TESTMODE;
+  host_load_packet(ppo2_x1000, operational_state);
 
   Serial.println("Payload prepared");
   return STATE_OK;

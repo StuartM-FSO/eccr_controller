@@ -1,5 +1,6 @@
 #include <sys/_stdint.h>
 #include "system_state.h"
+#include "shared.h"
 
 typedef struct{
   bool initialised;

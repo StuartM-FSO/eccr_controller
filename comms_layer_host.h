@@ -4,6 +4,7 @@
 
 #include <Arduino.h>
 #include <stdint.h>
+#include "shared.h"
 
 typedef enum{
   HOST_OK,
@@ -17,6 +18,6 @@ typedef enum{
 host_return_t host_init(void);
 host_return_t host_run(void);
 
-host_return_t host_load_packet(const uint16_t *ppo2_x1000);
+host_return_t host_load_packet(const uint16_t *ppo2_x1000, const operational_state_t opstate);
 
 #endif

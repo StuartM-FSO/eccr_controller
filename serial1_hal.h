@@ -4,6 +4,7 @@
 
 #include <Arduino.h>
 #include <stdint.h>
+#include "shared.h"
 
 typedef enum{
   TXCOMMAND_EMPTY = 0,
@@ -22,20 +23,13 @@ typedef enum{
   SER_TIMEOUT_FAILURE
 } ser_return_t;
 
-typedef enum{
-  OPSTATE_DIVEMODE,
-  OPSTATE_DATAMODE,
-  OPSTATE_FAILURE,
-  OPSTATE_TESTMODE
-} operational_state_t;
-
 ser_return_t serial1_init(void);
 ser_return_t serial1_flush_serial_buffer(void);
 ser_return_t serial1_send_handshake_request(void);
 ser_return_t serial1_send_handshake_acknowledgement(void);
 ser_return_t serial1_listen_for_command(void);
 ser_return_t serial1_send_data_packet_request(void);
-ser_return_t serial1_load_data_packet(uint16_t *ppo2_x1000);
+ser_return_t serial1_load_data_packet(uint16_t *ppo2_x1000, const operational_state_t op_state);
 ser_return_t serial1_send_payload(void);
 ser_return_t serial1_listen_for_data_packet(void);
 bool serial1_handshake_received(void);
