@@ -308,7 +308,7 @@ void fsm_read_cells(const uint32_t now){
     system_set_fsm_state(FSM_FAILED_SAFE);
     return;
   }
-  if(prepare_ppo2_for_payload(/* FIX */) != STATE_OK){
+  if(prepare_ppo2_for_payload() != STATE_OK){
     Serial.println("Error preparing payload in fsm_read_cells");
   }
   if(gpio_slide_switch_on() == SWITCH_ON){
