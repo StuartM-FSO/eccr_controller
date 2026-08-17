@@ -40,7 +40,6 @@ system_state_t state_init(void){
   current_state.display_on = false;
   current_state.initialised = true;
   current_state.main_loop_timer = 0U;
-  current_state.host_operational = false;
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
     cells.cell_reading_raw[channel] = 0U;
   }

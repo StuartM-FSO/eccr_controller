@@ -140,7 +140,6 @@ void loop() {
     system_set_fsm_state(FSM_FAILED_SAFE);
   }
 
-
   switch(current_state){
     case FSM_UNINITIALISED:
       Serial.println("fsm uninitialised");
@@ -214,6 +213,23 @@ void fsm_calibration_unavailable(uint32_t now){
 }
 
 system_state_t prepare_ppo2_for_payload(void){  // FIX!!!
+  uint16_t ppo2_x1000[THREE_CELLS] = {};
+  uint16_t raw_reading = 0U;
+
+  for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
+    if(system_get_cell_reading(&raw_reading, channel) != STATE_OK){
+      Serial.println("Error getting cell reading");
+      for(;;);
+      // Handle error
+    }
+    if(convert_raw_to_ppo2(raw_reading, channel, &ppo2_x1000[channel]) != STATE_OK){
+      Serial.println("Payload, error converting raw");
+      for(;;);
+      // Handle error
+    }
+  }
+
+  host_load_packet(ppo2_x1000);
 
   Serial.println("Payload prepared");
   return STATE_OK;
