@@ -179,6 +179,7 @@ ser_return_t serial1_load_data_packet(uint16_t *ppo2_x1000){
     payload.ppo2_x1000[channel] = ppo2_x1000[channel];
   }
   payload.id = state.last_packet_id + ID_INCREMENT;
+  payload.operational_state = OPSTATE_DIVEMODE;
   payload.crc = crc16_ccitt((const uint8_t *)&payload, (sizeof(payload) - sizeof(payload.crc)));
   return SER_OK;
 }

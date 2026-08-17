@@ -25,7 +25,8 @@ typedef enum{
 typedef enum{
   OPSTATE_DIVEMODE,
   OPSTATE_DATAMODE,
-  OPSTATE_FAILURE
+  OPSTATE_FAILURE,
+  OPSTATE_TESTMODE
 } operational_state_t;
 
 ser_return_t serial1_init(void);
