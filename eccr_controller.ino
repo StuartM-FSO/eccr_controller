@@ -131,6 +131,10 @@ void loop() {
   fsm_state_t current_state = FSM_UNINITIALISED;
   uint32_t now = millis();
 
+  if(host_run() == HOST_ERROR_HARD){
+    Serial.println("Comms layer failure");
+  }
+
   if(system_get_fsm_state(&current_state) != STATE_OK){
     current_state = FSM_FAILED_SAFE;
     system_set_fsm_state(FSM_FAILED_SAFE);
