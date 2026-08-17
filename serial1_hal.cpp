@@ -14,6 +14,7 @@ constexpr uint32_t SERIAL_STARTUP_TIME_OUT_MS = 5000U;
 struct __attribute__((packed)) STRUCT {
   uint32_t id;
   uint16_t ppo2_x1000[THREE_CELLS];
+  operational_state_t operational_state;
   uint16_t crc;
 } payload;
 
