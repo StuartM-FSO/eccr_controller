@@ -140,9 +140,6 @@ void loop() {
     system_set_fsm_state(FSM_FAILED_SAFE);
   }
 
-  if((current_state == FSM_WAITING) || (current_state == FSM_DATA_DISPLAY)){
-    // Run comms layer here
-  }
 
   switch(current_state){
     case FSM_UNINITIALISED:

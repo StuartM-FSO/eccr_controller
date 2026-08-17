@@ -2,17 +2,18 @@
 #include "system_state.h"
 
 typedef struct{
-  bool initialised = false;
-  bool display_on = false;
-  bool divemode_led_on = false;
-  fsm_state_t fsm_state = FSM_UNINITIALISED;
-  uint16_t cell_reference_readings[THREE_CELLS] = {0U};
-  uint32_t cell_read_timer = 0U;
-  uint32_t lcd_update_timer = 0U;
-  uint32_t divemode_led_timer = 0U;
-  uint32_t calibration_write_timer = 0U;
-  uint32_t calibration_hold_timer = 0U;
-  uint32_t main_loop_timer = 0U;
+  bool initialised;
+  bool display_on;
+  bool divemode_led_on;
+  bool host_operational;
+  fsm_state_t fsm_state;
+  uint16_t cell_reference_readings[THREE_CELLS];
+  uint32_t cell_read_timer;
+  uint32_t lcd_update_timer;
+  uint32_t divemode_led_timer;
+  uint32_t calibration_write_timer;
+  uint32_t calibration_hold_timer;
+  uint32_t main_loop_timer;
 } loop_state_t;
 
 typedef struct{
@@ -40,6 +41,7 @@ system_state_t state_init(void){
   current_state.display_on = false;
   current_state.initialised = true;
   current_state.main_loop_timer = 0U;
+  current_state.host_operational = false;
   for(uint8_t channel = 0U; channel < THREE_CELLS; channel++){
     cells.cell_reading_raw[channel] = 0U;
   }
